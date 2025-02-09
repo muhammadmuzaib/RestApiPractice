@@ -8,7 +8,10 @@ import com.example.demo2.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -27,10 +30,10 @@ import java.util.Set;
 
 
 @RestController
-@RequestMapping("/api")
-public class LoginController {
+@RequestMapping("/api/employee")
+public class EmployeeLoginController {
 
-    private static final Logger logger = LogManager.getLogger(LoginController.class);
+    private static final Logger logger = LogManager.getLogger(EmployeeLoginController.class);
 
     private static final String SCHEMA_PATH = "/schemas/login-schema.json";
     private JsonSchema schema;
@@ -41,9 +44,9 @@ public class LoginController {
     private final EmployeeLoginService employeeLoginService;
 
     @Autowired
-    public LoginController(EmployeeLoginService employeeLoginService,
-                           SchemaValidationService schemaValidator,
-                           JsonResponseService responseService) {
+    public EmployeeLoginController(EmployeeLoginService employeeLoginService,
+                                   SchemaValidationService schemaValidator,
+                                   JsonResponseService responseService) {
         this.employeeLoginService = employeeLoginService;
         this.responseService = responseService;
         this.schemaValidator = schemaValidator;
@@ -57,7 +60,21 @@ public class LoginController {
 
     @Operation(
             summary = "Employee Login",
-            description = "Validates and authenticates the employee credentials using JSON schema validation"
+            description = "Validates and authenticates the employee credentials using JSON schema validation",
+            parameters = {
+                    @Parameter(
+                            name = "Accept",
+                            description = "Expected response media type",
+                            example = "application/json",
+                            in = ParameterIn.HEADER
+                    ),
+                    @Parameter(
+                            name = "Content-Type",
+                            description = "Request media type",
+                            example = "application/json",
+                            in = ParameterIn.HEADER
+                    )
+            }
     )
     @ApiResponses({
             @ApiResponse(
@@ -77,7 +94,22 @@ public class LoginController {
             )
     })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody String rawJson, HttpServletRequest httpRequest) {
+    public ResponseEntity<?> login(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Payload for employee login. Must follow the JSON schema defined at " + SCHEMA_PATH,
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = EmployeeLoginRequestDto.class),
+                            examples = @ExampleObject(
+                                    name = "Employee Login Example",
+                                    summary = "A sample payload for employee login",
+                                    value = "{\n  \"username\": \"johndoe\",\n  \"password\": \"examplePassword123\"\n}"
+                            )
+                    )
+            )
+            @RequestBody String rawJson,
+            HttpServletRequest httpRequest) {
         final String correlationId = (String) httpRequest.getAttribute("correlationId");
         logger.info("Login request recieved. Correlation ID: {}", correlationId);
 
@@ -92,7 +124,7 @@ public class LoginController {
         EmployeeLoginRequestDto requestDto;
         try {
             requestDto = responseService.parseJsonToDto(rawJson, EmployeeLoginRequestDto.class);
-            logger.debug("Parsed EmployeeLoginRequestDto: {}", requestDto);
+            logger.info("Parsed EmployeeLoginRequestDto: {}", requestDto);
         } catch (Exception e) {
             logger.error("Error parsing JSON for correlationId {}: {}", correlationId, e.getMessage());
             return responseService.parseErrorResponse(correlationId);
@@ -125,7 +157,7 @@ public class LoginController {
 
 
     private boolean authenticateUser(String username, String password, String correlationId) {
-        logger.debug("Authenticating user: {}. Correlation ID: {}", username, correlationId);
+        logger.info("Authenticating user: {}. Correlation ID: {}", username, correlationId);
         return employeeLoginService.isValidEmployee(username, password, correlationId);
     }
 }

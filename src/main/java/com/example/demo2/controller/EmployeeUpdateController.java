@@ -10,7 +10,10 @@ import com.example.demo2.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -20,12 +23,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
+@RestController
+@RequestMapping("/api/employee")
 public class EmployeeUpdateController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeUpdateController.class);
@@ -54,7 +57,24 @@ public class EmployeeUpdateController {
         logger.info("Schemas loaded successfully:UPDATE_SCHEMA={}",UPDATE_SCHEMA);
     }
 
-    @Operation(summary = "Update employee details", description = "Partial update of employee record")
+    @Operation(
+            summary = "Update employee details",
+            description = "Partial update of employee record",
+            parameters = {
+                    @Parameter(
+                            name = "Accept",
+                            description = "Expected response media type",
+                            example = "application/json",
+                            in = ParameterIn.HEADER
+                    ),
+                    @Parameter(
+                            name = "Content-Type",
+                            description = "Request content type",
+                            example = "application/json",
+                            in = ParameterIn.HEADER
+                    )
+            }
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Employee updated",
                     content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
@@ -63,9 +83,22 @@ public class EmployeeUpdateController {
             @ApiResponse(responseCode = "404", description = "Employee not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PostMapping("/{username}/update")
+    @PostMapping("/update/{username}")
     public ResponseEntity<?> updateEmployee(
             @PathVariable String username,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Payload for updating employee details. Must follow the JSON schema defined at /schemas/employee-update-schema.json.",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = EmployeeUpdateRequestDto.class),
+                            examples = @ExampleObject(
+                                    name = "Employee Update Example",
+                                    summary = "A sample payload for updating employee details",
+                                    value = "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"password\": \"newPassword123\"\n}"
+                            )
+                    )
+            )
             @RequestBody String rawJson,
             HttpServletRequest request) {
 
@@ -73,7 +106,7 @@ public class EmployeeUpdateController {
         logger.info("Received update employee request for username: {}. CorrelationId: {}", username, correlationId);
 
 
-        logger.debug("Validating update employee schema for username: {}", username);
+        logger.info("Validating update employee schema for username: {}", username);
         Set<ValidationMessage> errors = schemaValidator.validate(updateSchema, rawJson);
         if (!errors.isEmpty()) {
             logger.error("Schema validation errors for update employee (username: {}, correlationId: {}): {}",
@@ -84,9 +117,9 @@ public class EmployeeUpdateController {
         // Parse DTO
         EmployeeUpdateRequestDto requestDto;
         try {
-            logger.debug("Parsing JSON to EmployeeUpdateRequestDto for username: {}", username);
+            logger.info("Parsing JSON to EmployeeUpdateRequestDto for username: {}", username);
             requestDto = responseService.parseJsonToDto(rawJson, EmployeeUpdateRequestDto.class);
-            logger.debug("Parsed EmployeeUpdateRequestDto: {}", requestDto);
+            logger.info("Parsed EmployeeUpdateRequestDto: {}", requestDto);
         } catch (Exception e) {
             logger.error("Error parsing JSON for update employee (username: {}, correlationId: {}): {}",
                     username, correlationId, e.getMessage(), e);

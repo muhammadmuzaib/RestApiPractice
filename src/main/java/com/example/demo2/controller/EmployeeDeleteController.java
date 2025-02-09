@@ -5,6 +5,8 @@ import com.example.demo2.dto.response.SuccessResponse;
 import com.example.demo2.service.EmployeeLoginService;
 import com.example.demo2.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/employees/delete")
+@RequestMapping("/api/employee")
 public class EmployeeDeleteController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeDeleteController.class);
@@ -35,14 +37,31 @@ public class EmployeeDeleteController {
         this.responseService = responseService;
     }
 
-    @Operation(summary = "Delete employee", description = "Permanently remove an employee record")
+    @Operation(
+            summary = "Delete employee",
+            description = "Permanently remove an employee record",
+            parameters = {
+                    @Parameter(
+                            name = "username",
+                            description = "Employee's username",
+                            example = "user1",
+                            in = ParameterIn.PATH
+                    ),
+                    @Parameter(
+                            name = "Accept",
+                            description = "Expected response media type",
+                            example = "application/json",
+                            in = ParameterIn.HEADER
+                    )
+            }
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Employee deleted",
                     content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
             @ApiResponse(responseCode = "404", description = "Employee not found",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @DeleteMapping("/{username}")
+    @DeleteMapping("/delete/{username}")
     public ResponseEntity<?> deleteEmployee(
             @PathVariable String username,
             HttpServletRequest request) {

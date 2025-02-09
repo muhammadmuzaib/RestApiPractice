@@ -9,7 +9,10 @@ import com.example.demo2.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -24,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api/employees")
+@RequestMapping("/api/employee")
 public class EmployeeCreationController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeCreationController.class);
@@ -53,7 +56,17 @@ public class EmployeeCreationController {
         logger.info("Schemas loaded successfully: CREATE_SCHEMA={}", CREATE_SCHEMA);
     }
 
-    @Operation(summary = "Create/Update employee", description = "Idempotent employee creation with schema validation")
+    @Operation(
+            summary = "Create employee",
+            description = "Idempotent employee creation with schema validation. " +
+                    "The JSON request body must match to the JSON Schema in " + CREATE_SCHEMA + ". " +
+                    "Include the header 'X-Correlation-ID' to help track requests.",
+            parameters = {
+                    @Parameter(name = "username", description = "Employee's username", example = "johndoe", in = ParameterIn.PATH),
+                    @Parameter(name = "Accept", description = "Expected response media type", example = "application/json", in = ParameterIn.HEADER),
+                    @Parameter(name = "Content-Type", description = "Content type of the request body", example = "application/json", in = ParameterIn.HEADER)
+            }
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Employee created/updated",
                     content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
@@ -65,6 +78,19 @@ public class EmployeeCreationController {
     @PutMapping("/create/{username}")
     public ResponseEntity<?> createEmployee(
             @PathVariable String username,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Employee creation payload. The JSON structure must follow the schema defined at " + CREATE_SCHEMA + ".",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = EmployeeCreateRequestDto.class),
+                            examples = @ExampleObject(
+                                    name = "Employee Creation Example",
+                                    summary = "A sample payload for creating an employee",
+                                    value = "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"password\": \"examplePassword123\"\n}"
+                            )
+                    )
+            )
             @RequestBody String rawJson,
             HttpServletRequest request) {
 
@@ -83,9 +109,9 @@ public class EmployeeCreationController {
         // 2. Parse DTO
         EmployeeCreateRequestDto requestDto;
         try {
-            logger.debug("Parsing JSON to EmployeeCreateRequestDto for username: {}", username);
+            logger.info("Parsing JSON to EmployeeCreateRequestDto for username: {}", username);
             requestDto = responseService.parseJsonToDto(rawJson, EmployeeCreateRequestDto.class);
-            logger.debug("Parsed EmployeeCreateRequestDto: {}", requestDto);
+            logger.info("Parsed EmployeeCreateRequestDto: {}", requestDto);
         } catch (Exception e) {
             logger.error("Error parsing JSON for create employee (username: {}, correlationId: {}): {}",
                     username, correlationId, e.getMessage(), e);
