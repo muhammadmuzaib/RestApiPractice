@@ -12,15 +12,15 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class EmployeeLoginService {
+public class EmployeeService {
 
-    private static final Logger logger = LogManager.getLogger(EmployeeLoginService.class);
+    private static final Logger logger = LogManager.getLogger(EmployeeService.class);
 
     private final List<Employee> employees = new ArrayList<>();
     private final Map<String, String> requestCorrelationMap = new HashMap<>();
 
-    public EmployeeLoginService() {
-        logger.info("Initializing EmployeeLoginService with default employees");
+    public EmployeeService() {
+        logger.info("Initializing EmployeeService with default employees");
         employees.add(new Employee("admin", "password", "Admin", "User"));
         employees.add(new Employee("user1", "1234", "john", "doe"));
         logger.debug("Default employees added: {}", employees);

@@ -37,7 +37,10 @@ public class EmployeeOptionsController {
     @ApiResponse(
             responseCode = "200",
             description = "List of supported methods",
-            content = @Content(schema = @Schema(implementation = HttpMethodInfo.class))
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = HttpMethodInfo.class)
+            )
     )
     @RequestMapping(method = RequestMethod.OPTIONS)
     public ResponseEntity<List<HttpMethodInfo>> getSupportedMethods() {

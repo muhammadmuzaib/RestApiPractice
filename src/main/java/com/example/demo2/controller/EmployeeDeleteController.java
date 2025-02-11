@@ -2,7 +2,7 @@ package com.example.demo2.controller;
 
 import com.example.demo2.dto.response.ErrorResponse;
 import com.example.demo2.dto.response.SuccessResponse;
-import com.example.demo2.service.EmployeeLoginService;
+import com.example.demo2.service.EmployeeService;
 import com.example.demo2.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,11 +27,11 @@ public class EmployeeDeleteController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeDeleteController.class);
 
-    private final EmployeeLoginService employeeService;
+    private final EmployeeService employeeService;
     private final JsonResponseService responseService;
 
     @Autowired
-    public EmployeeDeleteController(EmployeeLoginService employeeService,
+    public EmployeeDeleteController(EmployeeService employeeService,
                                     JsonResponseService responseService) {
         this.employeeService = employeeService;
         this.responseService = responseService;
@@ -57,9 +57,17 @@ public class EmployeeDeleteController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Employee deleted",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SuccessResponse.class)
+                    )
+            ),
             @ApiResponse(responseCode = "404", description = "Employee not found",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
     })
     @DeleteMapping("/delete/{username}")
     public ResponseEntity<?> deleteEmployee(

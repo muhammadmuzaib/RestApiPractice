@@ -4,13 +4,14 @@ import com.example.demo2.dto.request.EmployeeUpdateRequestDto;
 import com.example.demo2.dto.response.ErrorResponse;
 import com.example.demo2.dto.response.SuccessResponse;
 import com.example.demo2.model.Employee;
-import com.example.demo2.service.EmployeeLoginService;
+import com.example.demo2.service.EmployeeService;
 import com.example.demo2.service.JsonResponseService;
 import com.example.demo2.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -37,14 +38,14 @@ public class EmployeeUpdateController {
 
     private final SchemaValidationService schemaValidator;
     private final JsonResponseService responseService;
-    private final EmployeeLoginService employeeService;
+    private final EmployeeService employeeService;
 
     private JsonSchema updateSchema;
 
     @Autowired
     public EmployeeUpdateController(SchemaValidationService schemaValidator,
                                     JsonResponseService responseService,
-                                    EmployeeLoginService employeeService) {
+                                    EmployeeService employeeService) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
         this.employeeService = employeeService;
@@ -72,21 +73,15 @@ public class EmployeeUpdateController {
                             description = "Request content type",
                             example = "application/json",
                             in = ParameterIn.HEADER
+                    ),
+                    @Parameter(
+                            name = "username",
+                            description = "Username of the employee to update",
+                            example = "johndoe",
+                            in = ParameterIn.PATH
                     )
-            }
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employee updated",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request data",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Employee not found",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @PostMapping("/update/{username}")
-    public ResponseEntity<?> updateEmployee(
-            @PathVariable String username,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            },
+            requestBody = @RequestBody(
                     description = "Payload for updating employee details. Must follow the JSON schema defined at /schemas/employee-update-schema.json.",
                     required = true,
                     content = @Content(
@@ -99,6 +94,30 @@ public class EmployeeUpdateController {
                             )
                     )
             )
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Employee updated",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SuccessResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid request data",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "404", description = "Employee not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
+    })
+    @PostMapping("/update/{username}")
+    public ResponseEntity<?> updateEmployee(
+            @PathVariable String username,
             @RequestBody String rawJson,
             HttpServletRequest request) {
 

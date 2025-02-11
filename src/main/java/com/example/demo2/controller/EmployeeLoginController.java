@@ -2,7 +2,7 @@ package com.example.demo2.controller;
 
 import com.example.demo2.dto.request.EmployeeLoginRequestDto;
 import com.example.demo2.dto.response.LoginSuccessResponse;
-import com.example.demo2.service.EmployeeLoginService;
+import com.example.demo2.service.EmployeeService;
 import com.example.demo2.service.JsonResponseService;
 import com.example.demo2.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
@@ -10,6 +10,7 @@ import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,13 +42,13 @@ public class EmployeeLoginController {
 
     private SchemaValidationService schemaValidator;
     private JsonResponseService responseService;
-    private final EmployeeLoginService employeeLoginService;
+    private final EmployeeService employeeService;
 
     @Autowired
-    public EmployeeLoginController(EmployeeLoginService employeeLoginService,
+    public EmployeeLoginController(EmployeeService employeeService,
                                    SchemaValidationService schemaValidator,
                                    JsonResponseService responseService) {
-        this.employeeLoginService = employeeLoginService;
+        this.employeeService = employeeService;
         this.responseService = responseService;
         this.schemaValidator = schemaValidator;
     }
@@ -80,17 +81,36 @@ public class EmployeeLoginController {
             @ApiResponse(
                     responseCode = "200",
                     description = "User authenticated successfully",
-                    content = @Content(schema = @Schema(implementation = LoginSuccessResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = LoginSuccessResponse.class)
+                    ),
+                    headers = {
+                            @Header(
+                                    name = "Content-Type",
+                                    description = "Request media type",
+                                    schema = @Schema(
+                                            type = "string",
+                                            example = "application/json"
+                                    )
+                            )
+                    }
             ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Invalid request data (JSON schema validation error or parse error)",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "401",
                     description = "Invalid credentials",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
     })
     @PostMapping("/login")
@@ -158,6 +178,6 @@ public class EmployeeLoginController {
 
     private boolean authenticateUser(String username, String password, String correlationId) {
         logger.info("Authenticating user: {}. Correlation ID: {}", username, correlationId);
-        return employeeLoginService.isValidEmployee(username, password, correlationId);
+        return employeeService.isValidEmployee(username, password, correlationId);
     }
 }

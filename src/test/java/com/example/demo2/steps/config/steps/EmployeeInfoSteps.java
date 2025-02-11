@@ -1,6 +1,6 @@
 package com.example.demo2.steps.config.steps;
 
-import com.example.demo2.service.EmployeeLoginService;
+import com.example.demo2.service.EmployeeService;
 import com.example.demo2.steps.config.steps.util.RestTemplateProvider;
 import com.example.demo2.steps.config.steps.util.ScenarioContext;
 import io.cucumber.java.en.Then;
@@ -19,13 +19,13 @@ import static org.hamcrest.Matchers.containsString;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class EmployeeInfoSteps {
     private final ScenarioContext scenarioContext;
-    private final EmployeeLoginService employeeLoginService;
+    private final EmployeeService employeeService;
     private final String BASE_URL = "http://localhost:8080";
 
     @Autowired
-    public EmployeeInfoSteps(ScenarioContext scenarioContext, EmployeeLoginService employeeLoginService) {
+    public EmployeeInfoSteps(ScenarioContext scenarioContext, EmployeeService employeeService) {
         this.scenarioContext = scenarioContext;
-        this.employeeLoginService = employeeLoginService;
+        this.employeeService = employeeService;
     }
 
     @When("the client sends a GET request to {string}")

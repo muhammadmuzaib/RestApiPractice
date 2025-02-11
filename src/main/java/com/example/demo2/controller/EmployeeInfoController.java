@@ -3,7 +3,7 @@ package com.example.demo2.controller;
 import com.example.demo2.dto.response.EmployeeInfoResponse;
 import com.example.demo2.dto.response.ErrorResponse;
 import com.example.demo2.model.Employee;
-import com.example.demo2.service.EmployeeLoginService;
+import com.example.demo2.service.EmployeeService;
 import com.example.demo2.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,11 +25,11 @@ public class EmployeeInfoController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeInfoController.class);
 
-    private final EmployeeLoginService employeeService;
+    private final EmployeeService employeeService;
     private final JsonResponseService responseService;
 
     @Autowired
-    public EmployeeInfoController(EmployeeLoginService employeeService,
+    public EmployeeInfoController(EmployeeService employeeService,
                                   JsonResponseService responseService) {
         this.employeeService = employeeService;
         this.responseService = responseService;
@@ -54,10 +54,22 @@ public class EmployeeInfoController {
             }
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employee found",
-                    content = @Content(schema = @Schema(implementation = EmployeeInfoResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Employee not found",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Employee found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = EmployeeInfoResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Employee not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            )
     })
     @GetMapping("/get-info/{username}")
     public ResponseEntity<?> getEmployeeInfo(

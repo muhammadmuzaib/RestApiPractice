@@ -3,13 +3,14 @@ package com.example.demo2.controller;
 import com.example.demo2.dto.request.EmployeeCreateRequestDto;
 import com.example.demo2.dto.response.ErrorResponse;
 import com.example.demo2.dto.response.SuccessResponse;
-import com.example.demo2.service.EmployeeLoginService;
+import com.example.demo2.service.EmployeeService;
 import com.example.demo2.service.JsonResponseService;
 import com.example.demo2.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -36,14 +37,14 @@ public class EmployeeCreationController {
 
     private final SchemaValidationService schemaValidator;
     private final JsonResponseService responseService;
-    private final EmployeeLoginService employeeService;
+    private final EmployeeService employeeService;
 
     private JsonSchema createSchema;
 
     @Autowired
     public EmployeeCreationController(SchemaValidationService schemaValidator,
                                       JsonResponseService responseService,
-                                      EmployeeLoginService employeeService) {
+                                      EmployeeService employeeService) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
         this.employeeService = employeeService;
@@ -60,25 +61,8 @@ public class EmployeeCreationController {
             summary = "Create employee",
             description = "Idempotent employee creation with schema validation. " +
                     "The JSON request body must match to the JSON Schema in " + CREATE_SCHEMA + ". " +
-                    "Include the header 'X-Correlation-ID' to help track requests.",
-            parameters = {
-                    @Parameter(name = "username", description = "Employee's username", example = "johndoe", in = ParameterIn.PATH),
-                    @Parameter(name = "Accept", description = "Expected response media type", example = "application/json", in = ParameterIn.HEADER),
-                    @Parameter(name = "Content-Type", description = "Content type of the request body", example = "application/json", in = ParameterIn.HEADER)
-            }
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employee created/updated",
-                    content = @Content(schema = @Schema(implementation = SuccessResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid request data",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "409", description = "Employee already exists",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    })
-    @PutMapping("/create/{username}")
-    public ResponseEntity<?> createEmployee(
-            @PathVariable String username,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    "Include the header 'X-Correlation-ID' to help track requests. (Optional)",
+            requestBody = @RequestBody(
                     description = "Employee creation payload. The JSON structure must follow the schema defined at " + CREATE_SCHEMA + ".",
                     required = true,
                     content = @Content(
@@ -90,7 +74,36 @@ public class EmployeeCreationController {
                                     value = "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"password\": \"examplePassword123\"\n}"
                             )
                     )
+            ),
+            parameters = {
+                    @Parameter(name = "username", description = "Employee's username", example = "user1", in = ParameterIn.PATH),
+                    @Parameter(name = "Accept", description = "Expected response media type", example = "application/json", in = ParameterIn.HEADER),
+                    @Parameter(name = "Content-Type", description = "Content type of the request body", example = "application/json", in = ParameterIn.HEADER)
+            }
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Employee created",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = SuccessResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "Invalid request data",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
+            ),
+            @ApiResponse(responseCode = "409", description = "Employee already exists",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
+    })
+    @PutMapping("/create/{username}")
+    public ResponseEntity<?> createEmployee(
+            @PathVariable String username,
             @RequestBody String rawJson,
             HttpServletRequest request) {
 
