@@ -11,7 +11,6 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -80,20 +79,7 @@ public class EmployeeUpdateController {
                             example = "johndoe",
                             in = ParameterIn.PATH
                     )
-            },
-            requestBody = @RequestBody(
-                    description = "Payload for updating employee details. Must follow the JSON schema defined at /schemas/employee-update-schema.json.",
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = EmployeeUpdateRequestDto.class),
-                            examples = @ExampleObject(
-                                    name = "Employee Update Example",
-                                    summary = "A sample payload for updating employee details",
-                                    value = "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"password\": \"newPassword123\"\n}"
-                            )
-                    )
-            )
+            }
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Employee updated",
@@ -118,6 +104,19 @@ public class EmployeeUpdateController {
     @PostMapping("/update/{username}")
     public ResponseEntity<?> updateEmployee(
             @PathVariable String username,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Payload for updating employee details. Must follow the JSON schema defined at /schemas/employee-update-schema.json.",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = EmployeeUpdateRequestDto.class),
+                            examples = @ExampleObject(
+                                    name = "Employee Update Example",
+                                    summary = "A sample payload for updating employee details",
+                                    value = "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"password\": \"newPassword123\"\n}"
+                            )
+                    )
+            )
             @RequestBody String rawJson,
             HttpServletRequest request) {
 

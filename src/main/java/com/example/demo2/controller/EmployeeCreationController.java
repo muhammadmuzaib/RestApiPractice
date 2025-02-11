@@ -10,7 +10,6 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -62,19 +61,6 @@ public class EmployeeCreationController {
             description = "Idempotent employee creation with schema validation. " +
                     "The JSON request body must match to the JSON Schema in " + CREATE_SCHEMA + ". " +
                     "Include the header 'X-Correlation-ID' to help track requests. (Optional)",
-            requestBody = @RequestBody(
-                    description = "Employee creation payload. The JSON structure must follow the schema defined at " + CREATE_SCHEMA + ".",
-                    required = true,
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = EmployeeCreateRequestDto.class),
-                            examples = @ExampleObject(
-                                    name = "Employee Creation Example",
-                                    summary = "A sample payload for creating an employee",
-                                    value = "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"password\": \"examplePassword123\"\n}"
-                            )
-                    )
-            ),
             parameters = {
                     @Parameter(name = "username", description = "Employee's username", example = "user1", in = ParameterIn.PATH),
                     @Parameter(name = "Accept", description = "Expected response media type", example = "application/json", in = ParameterIn.HEADER),
@@ -104,6 +90,19 @@ public class EmployeeCreationController {
     @PutMapping("/create/{username}")
     public ResponseEntity<?> createEmployee(
             @PathVariable String username,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "Employee creation payload. The JSON structure must follow the schema defined at " + CREATE_SCHEMA + ".",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = EmployeeCreateRequestDto.class),
+                            examples = @ExampleObject(
+                                    name = "Employee Creation Example",
+                                    summary = "A sample payload for creating an employee",
+                                    value = "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"password\": \"examplePassword123\"\n}"
+                            )
+                    )
+            )
             @RequestBody String rawJson,
             HttpServletRequest request) {
 
