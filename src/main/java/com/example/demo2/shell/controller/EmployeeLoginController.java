@@ -1,13 +1,11 @@
 package com.example.demo2.shell.controller;
 
 import com.example.demo2.core.service.AuthenticationService;
+import com.example.demo2.core.service.DtoConversionService;
+import com.example.demo2.core.service.SchemaValidationService;
 import com.example.demo2.shell.dto.request.EmployeeLoginRequestDto;
 import com.example.demo2.shell.dto.response.LoginSuccessResponse;
-import com.example.demo2.core.service.EmployeeService;
 import com.example.demo2.core.service.JsonResponseService;
-import com.example.demo2.core.service.SchemaValidationService;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -17,18 +15,14 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
-
-import java.util.Set;
 
 
 @RestController
@@ -40,11 +34,19 @@ public class EmployeeLoginController {
 
     private JsonResponseService responseService;
     private final AuthenticationService authenticationService;
+    private final DtoConversionService dtoConversionService;
+    private final SchemaValidationService schemaValidationService;
 
     @Autowired
-    public EmployeeLoginController(JsonResponseService responseService, AuthenticationService authenticationService) {
+    public EmployeeLoginController(JsonResponseService responseService,
+                                   AuthenticationService authenticationService,
+                                   DtoConversionService dtoConversionService,
+                                   SchemaValidationService schemaValidationService
+                                   ) {
         this.responseService = responseService;
         this.authenticationService = authenticationService;
+        this.dtoConversionService = dtoConversionService;
+        this.schemaValidationService = schemaValidationService;
     }
 
     @Operation(
@@ -118,21 +120,21 @@ public class EmployeeLoginController {
             )
             @RequestBody String rawJson,
             HttpServletRequest httpRequest) {
-        final String correlationId = (String) httpRequest.getAttribute("correlationId");
-        logger.info("Login request recieved. Correlation ID: {}", correlationId);
+        final String CORRELATION_ID = (String) httpRequest.getAttribute("correlationId");
+        logger.info("Login request recieved. Correlation ID: {}", CORRELATION_ID);
 
         // Validation
-        ResponseEntity<?> validationError = authenticationService.validateRequest(rawJson, correlationId);
+        ResponseEntity<?> validationError = schemaValidationService.validateRequest(rawJson, CORRELATION_ID);
         if (validationError != null) {
             return validationError;
         }
 
         // DTO Conversion
-        EmployeeLoginRequestDto requestDto = authenticationService.convertToDto(rawJson, correlationId);
+        EmployeeLoginRequestDto requestDto = dtoConversionService.convertToDto(rawJson, CORRELATION_ID);
         if (requestDto == null) {
-            return responseService.parseErrorResponse(correlationId);
+            return responseService.parseErrorResponse(CORRELATION_ID);
         }
 
-        return authenticationService.handleAuthentication(requestDto, correlationId);
+        return authenticationService.handleAuthentication(requestDto, CORRELATION_ID);
     }
 }

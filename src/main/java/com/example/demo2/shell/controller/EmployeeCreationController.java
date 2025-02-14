@@ -1,9 +1,9 @@
 package com.example.demo2.shell.controller;
 
+import com.example.demo2.core.service.EmployeeServiceImpl;
 import com.example.demo2.shell.dto.request.EmployeeCreateRequestDto;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
-import com.example.demo2.core.service.EmployeeService;
 import com.example.demo2.core.service.JsonResponseService;
 import com.example.demo2.core.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
@@ -36,17 +36,17 @@ public class EmployeeCreationController {
 
     private final SchemaValidationService schemaValidator;
     private final JsonResponseService responseService;
-    private final EmployeeService employeeService;
+    private final EmployeeServiceImpl employeeServiceImpl;
 
     private JsonSchema createSchema;
 
     @Autowired
     public EmployeeCreationController(SchemaValidationService schemaValidator,
                                       JsonResponseService responseService,
-                                      EmployeeService employeeService) {
+                                      EmployeeServiceImpl employeeServiceImpl) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
-        this.employeeService = employeeService;
+        this.employeeServiceImpl = employeeServiceImpl;
     }
 
     @PostConstruct
@@ -131,7 +131,7 @@ public class EmployeeCreationController {
         }
 
         // TODO: might remove later
-        if (employeeService.employeeExists(username)) {
+        if (employeeServiceImpl.employeeExists(username)) {
             logger.error("Employee already exists for username: {}. CorrelationId: {}", username, correlationId);
             return responseService.conflictErrorResponse("Employee already exists", correlationId);
         }
@@ -146,14 +146,14 @@ public class EmployeeCreationController {
                                                      EmployeeCreateRequestDto request,
                                                      String correlationId) {
         logger.info("Handling employee creation for username: {}. CorrelationId: {}", username, correlationId);
-        boolean exists = employeeService.employeeExists(username);
+        boolean exists = employeeServiceImpl.employeeExists(username);
 
         if (exists) {
             logger.error("Conflict: Employee already exists for username: {}. CorrelationId: {}", username, correlationId);
             return responseService.conflictErrorResponse("Employee already exists", correlationId);
         }
 
-        employeeService.createEmployee(
+        employeeServiceImpl.createEmployee(
                 username,
                 request.getPassword(),
                 request.getFirstName(),

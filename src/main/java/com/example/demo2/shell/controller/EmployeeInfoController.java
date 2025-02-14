@@ -3,7 +3,7 @@ package com.example.demo2.shell.controller;
 import com.example.demo2.shell.dto.response.EmployeeInfoResponse;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.core.model.Employee;
-import com.example.demo2.core.service.EmployeeService;
+import com.example.demo2.core.service.EmployeeServiceImpl;
 import com.example.demo2.core.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,13 +25,13 @@ public class EmployeeInfoController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeInfoController.class);
 
-    private final EmployeeService employeeService;
+    private final EmployeeServiceImpl employeeServiceImpl;
     private final JsonResponseService responseService;
 
     @Autowired
-    public EmployeeInfoController(EmployeeService employeeService,
+    public EmployeeInfoController(EmployeeServiceImpl employeeServiceImpl,
                                   JsonResponseService responseService) {
-        this.employeeService = employeeService;
+        this.employeeServiceImpl = employeeServiceImpl;
         this.responseService = responseService;
     }
 
@@ -79,7 +79,7 @@ public class EmployeeInfoController {
         String correlationId = (String) request.getAttribute("correlationId");
         logger.info("Received request to get employee info for username: {}. CorrelationId: {}", username, correlationId);
 
-        Employee employee = employeeService.getEmployeeByUsername(username);
+        Employee employee = employeeServiceImpl.getEmployeeByUsername(username);
 
         if (employee == null) {
             logger.error("Employee not found for username: {}. CorrelationId: {}", username, correlationId);

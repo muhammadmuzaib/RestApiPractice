@@ -1,10 +1,10 @@
 package com.example.demo2.shell.controller;
 
+import com.example.demo2.core.service.EmployeeServiceImpl;
 import com.example.demo2.shell.dto.request.EmployeeUpdateRequestDto;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
 import com.example.demo2.core.model.Employee;
-import com.example.demo2.core.service.EmployeeService;
 import com.example.demo2.core.service.JsonResponseService;
 import com.example.demo2.core.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
@@ -37,17 +37,17 @@ public class EmployeeUpdateController {
 
     private final SchemaValidationService schemaValidator;
     private final JsonResponseService responseService;
-    private final EmployeeService employeeService;
+    private final EmployeeServiceImpl employeeServiceImpl;
 
     private JsonSchema updateSchema;
 
     @Autowired
     public EmployeeUpdateController(SchemaValidationService schemaValidator,
                                     JsonResponseService responseService,
-                                    EmployeeService employeeService) {
+                                    EmployeeServiceImpl employeeServiceImpl) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
-        this.employeeService = employeeService;
+        this.employeeServiceImpl = employeeServiceImpl;
     }
 
     @PostConstruct
@@ -153,13 +153,13 @@ public class EmployeeUpdateController {
                                                    EmployeeUpdateRequestDto request,
                                                    String correlationId) {
         logger.info("Handling employee update for username: {}. CorrelationId: {}", username, correlationId);
-        Employee employee = employeeService.getEmployeeByUsername(username);
+        Employee employee = employeeServiceImpl.getEmployeeByUsername(username);
         if (employee == null) {
             logger.error("Employee not found for update (username: {}, correlationId: {})", username, correlationId);
             return responseService.notFoundResponse(correlationId);
         }
 
-        employeeService.updateEmployee(username, request);
+        employeeServiceImpl.updateEmployee(username, request);
         logger.info("Employee updated successfully for username: {}. CorrelationId: {}", username, correlationId);
         return ResponseEntity.ok(new SuccessResponse(
                 "success",

@@ -2,6 +2,7 @@ package com.example.demo2.core.service;
 
 import com.example.demo2.shell.dto.request.EmployeeUpdateRequestDto;
 import com.example.demo2.core.model.Employee;
+import com.example.demo2.shell.service.EmployeeService;
 import org.springframework.stereotype.Service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,15 +13,15 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class EmployeeService {
+public class EmployeeServiceImpl implements EmployeeService {
 
-    private static final Logger logger = LogManager.getLogger(EmployeeService.class);
+    private static final Logger logger = LogManager.getLogger(EmployeeServiceImpl.class);
 
     private final List<Employee> employees = new ArrayList<>();
     private final Map<String, String> requestCorrelationMap = new HashMap<>();
 
-    public EmployeeService() {
-        logger.info("Initializing EmployeeService with default employees");
+    public EmployeeServiceImpl() {
+        logger.info("Initializing EmployeeServiceImpl with default employees");
         employees.add(new Employee("admin", "password", "Admin", "User"));
         employees.add(new Employee("user1", "1234", "john", "doe"));
         logger.debug("Default employees added: {}", employees);

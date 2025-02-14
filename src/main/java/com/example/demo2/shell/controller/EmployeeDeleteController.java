@@ -2,7 +2,7 @@ package com.example.demo2.shell.controller;
 
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
-import com.example.demo2.core.service.EmployeeService;
+import com.example.demo2.core.service.EmployeeServiceImpl;
 import com.example.demo2.core.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,13 +27,13 @@ public class EmployeeDeleteController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeDeleteController.class);
 
-    private final EmployeeService employeeService;
+    private final EmployeeServiceImpl employeeServiceImpl;
     private final JsonResponseService responseService;
 
     @Autowired
-    public EmployeeDeleteController(EmployeeService employeeService,
+    public EmployeeDeleteController(EmployeeServiceImpl employeeServiceImpl,
                                     JsonResponseService responseService) {
-        this.employeeService = employeeService;
+        this.employeeServiceImpl = employeeServiceImpl;
         this.responseService = responseService;
     }
 
@@ -77,13 +77,13 @@ public class EmployeeDeleteController {
         final String correlationId = (String) request.getAttribute("correlationId");
         logger.info("Received delete request for employee '{}'. CorrelationId: {}", username, correlationId);
 
-        boolean exists = employeeService.employeeExists(username);
+        boolean exists = employeeServiceImpl.employeeExists(username);
         if (!exists) {
             logger.error("Employee '{}' not found. CorrelationId: {}", username, correlationId);
             return responseService.notFoundResponse(correlationId);
         }
 
-        employeeService.deleteEmployee(username);
+        employeeServiceImpl.deleteEmployee(username);
         logger.info("Employee '{}' deleted successfully. CorrelationId: {}", username, correlationId);
 
         return ResponseEntity.ok(new SuccessResponse(
