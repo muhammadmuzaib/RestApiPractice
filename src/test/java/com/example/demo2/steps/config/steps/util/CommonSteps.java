@@ -1,6 +1,6 @@
 package com.example.demo2.steps.config.steps.util;
 
-import com.example.demo2.core.service.EmployeeService;
+import com.example.demo2.core.service.EmployeeServiceImpl;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -22,26 +22,26 @@ import static org.hamcrest.Matchers.is;
 public class CommonSteps {
 
     private final ScenarioContext scenarioContext;
-    private final EmployeeService employeeService;
+    private final EmployeeServiceImpl employeeServiceImpl;
     private final String BASE_URL = "http://localhost:8080";
 
     @Autowired
-    public CommonSteps(ScenarioContext scenarioContext, EmployeeService employeeService) {
+    public CommonSteps(ScenarioContext scenarioContext, EmployeeServiceImpl employeeServiceImpl) {
         this.scenarioContext = scenarioContext;
-        this.employeeService = employeeService;
+        this.employeeServiceImpl = employeeServiceImpl;
     }
 
     @Given("an employee exists with username {string}")
     public void anEmployeeExistsWithUsername(String username) {
-        if (!employeeService.employeeExists(username)) {
-            employeeService.createEmployee(username, "defaultPassword", "DefaultFirstName", "DefaultLastName");
+        if (!employeeServiceImpl.employeeExists(username)) {
+            employeeServiceImpl.createEmployee(username, "defaultPassword", "DefaultFirstName", "DefaultLastName");
         }
     }
 
     @Given("no employee exists with username {string}")
     public void noEmployeeExistsWithUsername(String username) {
-        if (employeeService.employeeExists(username)) {
-            employeeService.deleteEmployee(username);
+        if (employeeServiceImpl.employeeExists(username)) {
+            employeeServiceImpl.deleteEmployee(username);
         }
     }
 

@@ -23,16 +23,16 @@ public class AuthenticationService {
 
     private final SchemaValidationService schemaValidator;
     private final JsonResponseService responseService;
-    private final EmployeeService employeeService;
+    private final EmployeeServiceImpl employeeServiceImpl;
     private final JsonSchema schema;
 
     @Autowired
     public AuthenticationService(SchemaValidationService schemaValidator,
                                  JsonResponseService responseService,
-                                 EmployeeService employeeService) throws Exception {
+                                 EmployeeServiceImpl employeeServiceImpl) throws Exception {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
-        this.employeeService = employeeService;
+        this.employeeServiceImpl = employeeServiceImpl;
         this.schema = schemaValidator.loadSchema(SCHEMA_PATH);
     }
 
@@ -80,6 +80,6 @@ public class AuthenticationService {
 
     public boolean authenticateUser(String username, String password, String correlationId) {
         logger.info("Authenticating user: {}. Correlation ID: {}", username, correlationId);
-        return employeeService.isValidEmployee(username, password, correlationId);
+        return employeeServiceImpl.isValidEmployee(username, password, correlationId);
     }
 }

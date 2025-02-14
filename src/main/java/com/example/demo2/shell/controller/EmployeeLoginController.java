@@ -3,11 +3,7 @@ package com.example.demo2.shell.controller;
 import com.example.demo2.core.service.AuthenticationService;
 import com.example.demo2.shell.dto.request.EmployeeLoginRequestDto;
 import com.example.demo2.shell.dto.response.LoginSuccessResponse;
-import com.example.demo2.core.service.EmployeeService;
 import com.example.demo2.core.service.JsonResponseService;
-import com.example.demo2.core.service.SchemaValidationService;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -17,18 +13,14 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
-
-import java.util.Set;
 
 
 @RestController
