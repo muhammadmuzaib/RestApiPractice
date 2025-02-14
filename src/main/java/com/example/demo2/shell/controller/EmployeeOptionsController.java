@@ -1,6 +1,6 @@
-package com.example.demo2.controller;
+package com.example.demo2.shell.controller;
 
-import com.example.demo2.dto.response.HttpMethodInfo;
+import com.example.demo2.shell.dto.response.HttpMethodInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

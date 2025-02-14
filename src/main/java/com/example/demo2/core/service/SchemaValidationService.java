@@ -1,4 +1,4 @@
-package com.example.demo2.service;
+package com.example.demo2.core.service;
 
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;

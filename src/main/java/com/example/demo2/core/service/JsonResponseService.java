@@ -1,6 +1,6 @@
-package com.example.demo2.service;
+package com.example.demo2.core.service;
 
-import com.example.demo2.dto.response.ErrorResponse;
+import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.ValidationMessage;
 import org.apache.logging.log4j.LogManager;

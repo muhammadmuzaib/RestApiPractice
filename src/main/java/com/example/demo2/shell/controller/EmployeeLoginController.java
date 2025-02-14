@@ -1,10 +1,11 @@
-package com.example.demo2.controller;
+package com.example.demo2.shell.controller;
 
-import com.example.demo2.dto.request.EmployeeLoginRequestDto;
-import com.example.demo2.dto.response.LoginSuccessResponse;
-import com.example.demo2.service.EmployeeService;
-import com.example.demo2.service.JsonResponseService;
-import com.example.demo2.service.SchemaValidationService;
+import com.example.demo2.core.service.AuthenticationService;
+import com.example.demo2.shell.dto.request.EmployeeLoginRequestDto;
+import com.example.demo2.shell.dto.response.LoginSuccessResponse;
+import com.example.demo2.core.service.EmployeeService;
+import com.example.demo2.core.service.JsonResponseService;
+import com.example.demo2.core.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +24,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.example.demo2.dto.response.ErrorResponse;
+import com.example.demo2.shell.dto.response.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -35,28 +36,15 @@ import java.util.Set;
 public class EmployeeLoginController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeLoginController.class);
-
     private static final String SCHEMA_PATH = "/schemas/login-schema.json";
-    private JsonSchema schema;
 
-
-    private SchemaValidationService schemaValidator;
     private JsonResponseService responseService;
-    private final EmployeeService employeeService;
+    private final AuthenticationService authenticationService;
 
     @Autowired
-    public EmployeeLoginController(EmployeeService employeeService,
-                                   SchemaValidationService schemaValidator,
-                                   JsonResponseService responseService) {
-        this.employeeService = employeeService;
+    public EmployeeLoginController(JsonResponseService responseService, AuthenticationService authenticationService) {
         this.responseService = responseService;
-        this.schemaValidator = schemaValidator;
-    }
-
-    @PostConstruct
-    public void init() throws Exception {
-        this.schema = schemaValidator.loadSchema(SCHEMA_PATH);
-        logger.info("Json schema loaded from path: {}", SCHEMA_PATH);
+        this.authenticationService = authenticationService;
     }
 
     @Operation(
@@ -134,50 +122,17 @@ public class EmployeeLoginController {
         logger.info("Login request recieved. Correlation ID: {}", correlationId);
 
         // Validation
-        Set<ValidationMessage> errors = schemaValidator.validate(schema, rawJson);
-        if (!errors.isEmpty()) {
-            logger.error("Validation errors for correlationId {}: {}", correlationId, errors);
-            return responseService.validationErrorResponse(errors, correlationId);
+        ResponseEntity<?> validationError = authenticationService.validateRequest(rawJson, correlationId);
+        if (validationError != null) {
+            return validationError;
         }
 
         // DTO Conversion
-        EmployeeLoginRequestDto requestDto;
-        try {
-            requestDto = responseService.parseJsonToDto(rawJson, EmployeeLoginRequestDto.class);
-            logger.info("Parsed EmployeeLoginRequestDto: {}", requestDto);
-        } catch (Exception e) {
-            logger.error("Error parsing JSON for correlationId {}: {}", correlationId, e.getMessage());
+        EmployeeLoginRequestDto requestDto = authenticationService.convertToDto(rawJson, correlationId);
+        if (requestDto == null) {
             return responseService.parseErrorResponse(correlationId);
         }
 
-        return handleAuthentication(requestDto, correlationId);
-    }
-
-    private ResponseEntity<?> handleAuthentication(EmployeeLoginRequestDto request, String correlationId) {
-        logger.info("Attempting authentication for user: {}, Correlation ID: {}", request.getUsername(), correlationId);
-        boolean isAuthenticated = authenticateUser(
-                request.getUsername(),
-                request.getPassword(),
-                correlationId
-        );
-
-        if (isAuthenticated) {
-            logger.info("User {} authenticated successfully. Correlation ID: {}", request.getUsername(), correlationId);
-            return ResponseEntity.ok(new LoginSuccessResponse(
-                    "success",
-                    "User authenticated",
-                    correlationId
-            ));
-        } else {
-            logger.error("Authentication failed for user {}. Correlation ID: {}", request.getUsername(), correlationId);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ErrorResponse("error", "Invalid credentials", correlationId, null));
-        }
-    }
-
-
-    private boolean authenticateUser(String username, String password, String correlationId) {
-        logger.info("Authenticating user: {}. Correlation ID: {}", username, correlationId);
-        return employeeService.isValidEmployee(username, password, correlationId);
+        return authenticationService.handleAuthentication(requestDto, correlationId);
     }
 }

@@ -20,7 +20,4 @@ public class ScenarioContext {
     public void setLatestResponse(ResponseEntity<String> latestResponse) {
         this.latestResponse = latestResponse;
     }
-
-    // You can also store other scenario-level data here, if needed
-    // e.g., user credentials, tokens, etc.
 }
