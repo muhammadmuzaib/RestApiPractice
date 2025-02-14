@@ -1,11 +1,11 @@
-package com.example.demo2.controller;
+package com.example.demo2.shell.controller;
 
-import com.example.demo2.dto.request.EmployeeCreateRequestDto;
-import com.example.demo2.dto.response.ErrorResponse;
-import com.example.demo2.dto.response.SuccessResponse;
-import com.example.demo2.service.EmployeeService;
-import com.example.demo2.service.JsonResponseService;
-import com.example.demo2.service.SchemaValidationService;
+import com.example.demo2.shell.dto.request.EmployeeCreateRequestDto;
+import com.example.demo2.shell.dto.response.ErrorResponse;
+import com.example.demo2.shell.dto.response.SuccessResponse;
+import com.example.demo2.core.service.EmployeeService;
+import com.example.demo2.core.service.JsonResponseService;
+import com.example.demo2.core.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;

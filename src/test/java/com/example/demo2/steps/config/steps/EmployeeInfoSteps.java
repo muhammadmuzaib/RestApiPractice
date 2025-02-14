@@ -1,6 +1,6 @@
 package com.example.demo2.steps.config.steps;
 
-import com.example.demo2.service.EmployeeService;
+import com.example.demo2.core.service.EmployeeService;
 import com.example.demo2.steps.config.steps.util.RestTemplateProvider;
 import com.example.demo2.steps.config.steps.util.ScenarioContext;
 import io.cucumber.java.en.Then;

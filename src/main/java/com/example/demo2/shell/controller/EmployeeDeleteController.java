@@ -1,9 +1,9 @@
-package com.example.demo2.controller;
+package com.example.demo2.shell.controller;
 
-import com.example.demo2.dto.response.ErrorResponse;
-import com.example.demo2.dto.response.SuccessResponse;
-import com.example.demo2.service.EmployeeService;
-import com.example.demo2.service.JsonResponseService;
+import com.example.demo2.shell.dto.response.ErrorResponse;
+import com.example.demo2.shell.dto.response.SuccessResponse;
+import com.example.demo2.core.service.EmployeeService;
+import com.example.demo2.core.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

@@ -1,4 +1,4 @@
-package com.example.demo2.model;
+package com.example.demo2.core.model;
 
 public class Employee {
     private String username;

@@ -1,6 +1,6 @@
 package com.example.demo2.steps.config.steps.util;
 
-import com.example.demo2.service.EmployeeService;
+import com.example.demo2.core.service.EmployeeService;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -60,6 +60,8 @@ public class CommonSteps {
                 requestEntity,
                 String.class
         );
+        System.out.println("DEBUG status code: " + response.getStatusCode());
+        System.out.println("DEBUG body: " + response.getBody());
         scenarioContext.setLatestResponse(response);
     }
 

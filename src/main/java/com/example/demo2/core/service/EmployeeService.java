@@ -1,7 +1,7 @@
-package com.example.demo2.service;
+package com.example.demo2.core.service;
 
-import com.example.demo2.dto.request.EmployeeUpdateRequestDto;
-import com.example.demo2.model.Employee;
+import com.example.demo2.shell.dto.request.EmployeeUpdateRequestDto;
+import com.example.demo2.core.model.Employee;
 import org.springframework.stereotype.Service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
