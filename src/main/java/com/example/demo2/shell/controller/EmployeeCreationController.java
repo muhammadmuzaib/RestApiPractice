@@ -1,13 +1,10 @@
 package com.example.demo2.shell.controller;
 
-import com.example.demo2.core.service.EmployeeServiceImpl;
+import com.example.demo2.core.service.*;
 import com.example.demo2.shell.dto.request.EmployeeCreateRequestDto;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
-import com.example.demo2.core.service.JsonResponseService;
-import com.example.demo2.core.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
-import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -24,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/employee")
@@ -36,17 +32,20 @@ public class EmployeeCreationController {
 
     private final SchemaValidationService schemaValidator;
     private final JsonResponseService responseService;
-    private final EmployeeServiceImpl employeeServiceImpl;
+    private final EmployeeCreationService employeeCreationService;
+    private final DtoConversionService dtoConversionService;
 
     private JsonSchema createSchema;
 
     @Autowired
     public EmployeeCreationController(SchemaValidationService schemaValidator,
                                       JsonResponseService responseService,
-                                      EmployeeServiceImpl employeeServiceImpl) {
+                                      EmployeeCreationService employeeCreationService,
+                                      DtoConversionService dtoConversionService) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
-        this.employeeServiceImpl = employeeServiceImpl;
+        this.employeeCreationService = employeeCreationService;
+        this.dtoConversionService = dtoConversionService;
     }
 
     @PostConstruct
@@ -106,64 +105,22 @@ public class EmployeeCreationController {
             @RequestBody String rawJson,
             HttpServletRequest request) {
 
-        final String correlationId = (String) request.getAttribute("correlationId");
-        logger.info("Received create employee request for username: {}. CorrelationId: {}", username, correlationId);
+        final String CORRELATION_ID = (String) request.getAttribute("correlationId");
+        logger.info("Received create employee request for username: {}. CorrelationId: {}", username, CORRELATION_ID);
 
         // 1. Schema Validation
-        logger.debug("Validating create employee schema for username: {}", username);
-        Set<ValidationMessage> errors = schemaValidator.validate(createSchema, rawJson);
-        if (!errors.isEmpty()) {
-            logger.error("Schema validation errors for create employee (username: {}, correlationId: {}): {}",
-                    username, correlationId, errors);
-            return responseService.validationErrorResponse(errors, correlationId);
+        ResponseEntity<?> validationError = schemaValidator.validateRequest(rawJson, CORRELATION_ID, createSchema);
+        if (validationError != null) {
+            return validationError;
         }
 
-        // 2. Parse DTO
-        EmployeeCreateRequestDto requestDto;
-        try {
-            logger.info("Parsing JSON to EmployeeCreateRequestDto for username: {}", username);
-            requestDto = responseService.parseJsonToDto(rawJson, EmployeeCreateRequestDto.class);
-            logger.info("Parsed EmployeeCreateRequestDto: {}", requestDto);
-        } catch (Exception e) {
-            logger.error("Error parsing JSON for create employee (username: {}, correlationId: {}): {}",
-                    username, correlationId, e.getMessage(), e);
-            return responseService.parseErrorResponse(correlationId);
+        // 2. DTO Conversion
+        EmployeeCreateRequestDto requestDto = dtoConversionService.convertToDto(rawJson, CORRELATION_ID, EmployeeCreateRequestDto.class);
+        if (requestDto == null) {
+            return responseService.parseErrorResponse(CORRELATION_ID);
         }
 
-        // TODO: might remove later
-        if (employeeServiceImpl.employeeExists(username)) {
-            logger.error("Employee already exists for username: {}. CorrelationId: {}", username, correlationId);
-            return responseService.conflictErrorResponse("Employee already exists", correlationId);
-        }
-
-        logger.info("Proceeding to handle employee creation for username: {}. CorrelationId: {}", username, correlationId);
-        return handleEmployeeCreation(username, requestDto, correlationId);
-    }
-
-
-
-    private ResponseEntity<?> handleEmployeeCreation(String username,
-                                                     EmployeeCreateRequestDto request,
-                                                     String correlationId) {
-        logger.info("Handling employee creation for username: {}. CorrelationId: {}", username, correlationId);
-        boolean exists = employeeServiceImpl.employeeExists(username);
-
-        if (exists) {
-            logger.error("Conflict: Employee already exists for username: {}. CorrelationId: {}", username, correlationId);
-            return responseService.conflictErrorResponse("Employee already exists", correlationId);
-        }
-
-        employeeServiceImpl.createEmployee(
-                username,
-                request.getPassword(),
-                request.getFirstName(),
-                request.getLastName()
-        );
-        logger.info("Employee created successfully for username: {}. CorrelationId: {}", username, correlationId);
-        return ResponseEntity.ok(new SuccessResponse(
-                "success",
-                "Employee created",
-                correlationId
-        ));
+        // 3. Business Logic: Delegate to the creation service
+        return employeeCreationService.handleEmployeeCreation(username, requestDto, CORRELATION_ID);
     }
 }

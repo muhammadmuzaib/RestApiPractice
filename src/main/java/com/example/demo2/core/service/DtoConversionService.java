@@ -15,10 +15,10 @@ public class DtoConversionService {
         this.responseService = responseService;
     }
 
-    public EmployeeLoginRequestDto convertToDto(String rawJson, String correlationId) {
+    public <T> T convertToDto(String rawJson, String correlationId, Class<T> EmployeeRequestDto) {
         try {
-            EmployeeLoginRequestDto dto = responseService.parseJsonToDto(rawJson, EmployeeLoginRequestDto.class);
-            logger.info("Parsed EmployeeLoginRequestDto: {}", dto);
+            T dto = responseService.parseJsonToDto(rawJson, EmployeeRequestDto);
+            logger.info("Parsed DTO: {}", dto);
             return dto;
         } catch (Exception e) {
             logger.error("Error parsing JSON for correlationId {}: {}", correlationId, e.getMessage());

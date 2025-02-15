@@ -1,5 +1,6 @@
 package com.example.demo2.shell.controller;
 
+import com.example.demo2.core.service.EmployeeOptionsService;
 import com.example.demo2.shell.dto.response.HttpMethodInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,6 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,6 +23,13 @@ import java.util.List;
 public class EmployeeOptionsController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeOptionsController.class);
+
+    private final EmployeeOptionsService employeeMethodService;
+
+    @Autowired
+    public EmployeeOptionsController(EmployeeOptionsService employeeMethodService) {
+        this.employeeMethodService = employeeMethodService;
+    }
 
     @Operation(
             summary = "List supported methods",
@@ -44,20 +53,6 @@ public class EmployeeOptionsController {
     )
     @RequestMapping(method = RequestMethod.OPTIONS)
     public ResponseEntity<List<HttpMethodInfo>> getSupportedMethods() {
-        List<HttpMethodInfo> methods = List.of(
-                new HttpMethodInfo("GET", "Retrieve employee details by username"),
-                new HttpMethodInfo("POST", "Update partial employee information"),
-                new HttpMethodInfo("PUT", "Create or replace employee record"),
-                new HttpMethodInfo("DELETE", "Remove employee record"),
-                new HttpMethodInfo("OPTIONS", "List supported HTTP methods")
-        );
-        logger.debug("Constructed supported methods list: {}", methods);
-
-        ResponseEntity<List<HttpMethodInfo>> response = ResponseEntity.ok()
-                .header("Allow", "GET, POST, PUT, DELETE, OPTIONS")
-                .body(methods);
-
-        logger.info("Returning response with header Allow: GET, POST, PUT, DELETE, OPTIONS.");
-        return response;
+        return employeeMethodService.ListSupportedMethods();
     }
 }

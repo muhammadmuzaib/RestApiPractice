@@ -1,12 +1,11 @@
 package com.example.demo2.shell.controller;
 
-import com.example.demo2.core.service.EmployeeServiceImpl;
+import com.example.demo2.core.service.*;
+import com.example.demo2.shell.dto.request.EmployeeCreateRequestDto;
 import com.example.demo2.shell.dto.request.EmployeeUpdateRequestDto;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
 import com.example.demo2.core.model.Employee;
-import com.example.demo2.core.service.JsonResponseService;
-import com.example.demo2.core.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/employee")
@@ -37,17 +35,20 @@ public class EmployeeUpdateController {
 
     private final SchemaValidationService schemaValidator;
     private final JsonResponseService responseService;
-    private final EmployeeServiceImpl employeeServiceImpl;
+    private final DtoConversionService dtoConversionService;
+    private final EmployeeUpdateService employeeUpdateService;
 
     private JsonSchema updateSchema;
 
     @Autowired
     public EmployeeUpdateController(SchemaValidationService schemaValidator,
                                     JsonResponseService responseService,
-                                    EmployeeServiceImpl employeeServiceImpl) {
+                                    DtoConversionService dtoConversionService,
+                                    EmployeeUpdateService employeeUpdateService) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
-        this.employeeServiceImpl = employeeServiceImpl;
+        this.dtoConversionService = dtoConversionService;
+        this.employeeUpdateService = employeeUpdateService;
     }
 
     @PostConstruct
@@ -124,47 +125,19 @@ public class EmployeeUpdateController {
         logger.info("Received update employee request for username: {}. CorrelationId: {}", username, correlationId);
 
 
-        logger.info("Validating update employee schema for username: {}", username);
-        Set<ValidationMessage> errors = schemaValidator.validate(updateSchema, rawJson);
-        if (!errors.isEmpty()) {
-            logger.error("Schema validation errors for update employee (username: {}, correlationId: {}): {}",
-                    username, correlationId, errors);
-            return responseService.validationErrorResponse(errors, correlationId);
+        // 1. Schema Validation
+        ResponseEntity<?> validationError = schemaValidator.validateRequest(rawJson, correlationId, updateSchema);
+        if (validationError != null) {
+            return validationError;
         }
 
-        // Parse DTO
-        EmployeeUpdateRequestDto requestDto;
-        try {
-            logger.info("Parsing JSON to EmployeeUpdateRequestDto for username: {}", username);
-            requestDto = responseService.parseJsonToDto(rawJson, EmployeeUpdateRequestDto.class);
-            logger.info("Parsed EmployeeUpdateRequestDto: {}", requestDto);
-        } catch (Exception e) {
-            logger.error("Error parsing JSON for update employee (username: {}, correlationId: {}): {}",
-                    username, correlationId, e.getMessage(), e);
+        // 2. DTO Conversion
+        EmployeeUpdateRequestDto requestDto = dtoConversionService.convertToDto(rawJson, correlationId, EmployeeUpdateRequestDto.class);
+        if (requestDto == null) {
             return responseService.parseErrorResponse(correlationId);
         }
 
-        logger.info("Proceeding to handle employee update for username: {}. CorrelationId: {}", username, correlationId);
-        return handleEmployeeUpdate(username, requestDto, correlationId);
-    }
-
-
-    private ResponseEntity<?> handleEmployeeUpdate(String username,
-                                                   EmployeeUpdateRequestDto request,
-                                                   String correlationId) {
-        logger.info("Handling employee update for username: {}. CorrelationId: {}", username, correlationId);
-        Employee employee = employeeServiceImpl.getEmployeeByUsername(username);
-        if (employee == null) {
-            logger.error("Employee not found for update (username: {}, correlationId: {})", username, correlationId);
-            return responseService.notFoundResponse(correlationId);
-        }
-
-        employeeServiceImpl.updateEmployee(username, request);
-        logger.info("Employee updated successfully for username: {}. CorrelationId: {}", username, correlationId);
-        return ResponseEntity.ok(new SuccessResponse(
-                "success",
-                "Employee updated successfully",
-                correlationId
-        ));
+        // 3. Business Logic: Handle the update
+        return employeeUpdateService.handleEmployeeUpdate(username, requestDto, correlationId);
     }
 }

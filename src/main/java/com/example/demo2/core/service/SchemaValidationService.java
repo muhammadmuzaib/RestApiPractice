@@ -19,22 +19,18 @@ import java.util.Set;
 @Service
 public class SchemaValidationService {
 
-    private static final String SCHEMA_PATH = "/schemas/login-schema.json";
-
     private static final Logger logger = LogManager.getLogger(SchemaValidationService.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final JsonSchema schema;
     private final JsonResponseService responseService;
 
 
     @Autowired
     public SchemaValidationService(JsonResponseService responseService) throws IOException {
-        this.schema = loadSchema(SCHEMA_PATH);
         this.responseService = responseService;
     }
 
-    public ResponseEntity<?> validateRequest(String rawJson, String correlationId) {
+    public ResponseEntity<?> validateRequest(String rawJson, String correlationId, JsonSchema schema) {
         Set<ValidationMessage> errors = validate(schema, rawJson);
         if (!errors.isEmpty()) {
             logger.error("Validation errors for correlationId {}: {}", correlationId, errors);

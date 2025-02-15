@@ -6,6 +6,7 @@ import com.example.demo2.core.service.SchemaValidationService;
 import com.example.demo2.shell.dto.request.EmployeeLoginRequestDto;
 import com.example.demo2.shell.dto.response.LoginSuccessResponse;
 import com.example.demo2.core.service.JsonResponseService;
+import com.networknt.schema.JsonSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,21 +34,33 @@ public class EmployeeLoginController {
     private static final Logger logger = LogManager.getLogger(EmployeeLoginController.class);
     private static final String SCHEMA_PATH = "/schemas/login-schema.json";
 
+    private final SchemaValidationService schemaValidator;
     private JsonResponseService responseService;
     private final AuthenticationService authenticationService;
     private final DtoConversionService dtoConversionService;
     private final SchemaValidationService schemaValidationService;
 
+    private JsonSchema loginSchema;
+
     @Autowired
     public EmployeeLoginController(JsonResponseService responseService,
+                                   SchemaValidationService schemaValidator,
                                    AuthenticationService authenticationService,
                                    DtoConversionService dtoConversionService,
                                    SchemaValidationService schemaValidationService
                                    ) {
         this.responseService = responseService;
+        this.schemaValidator = schemaValidator;
         this.authenticationService = authenticationService;
         this.dtoConversionService = dtoConversionService;
         this.schemaValidationService = schemaValidationService;
+    }
+
+    @PostConstruct
+    public void init() throws Exception {
+        logger.info("Initializing EmployeeLoginController. Loading schemas...");
+        this.loginSchema = schemaValidator.loadSchema(SCHEMA_PATH);
+        logger.info("Schemas loaded successfully: SCHEMA_PATH={}", SCHEMA_PATH);
     }
 
     @Operation(
@@ -124,13 +138,13 @@ public class EmployeeLoginController {
         logger.info("Login request recieved. Correlation ID: {}", CORRELATION_ID);
 
         // Validation
-        ResponseEntity<?> validationError = schemaValidationService.validateRequest(rawJson, CORRELATION_ID);
+        ResponseEntity<?> validationError = schemaValidationService.validateRequest(rawJson, CORRELATION_ID, loginSchema);
         if (validationError != null) {
             return validationError;
         }
 
         // DTO Conversion
-        EmployeeLoginRequestDto requestDto = dtoConversionService.convertToDto(rawJson, CORRELATION_ID);
+        EmployeeLoginRequestDto requestDto = dtoConversionService.convertToDto(rawJson, CORRELATION_ID, EmployeeLoginRequestDto.class);
         if (requestDto == null) {
             return responseService.parseErrorResponse(CORRELATION_ID);
         }

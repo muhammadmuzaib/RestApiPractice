@@ -1,5 +1,6 @@
 package com.example.demo2.shell.controller;
 
+import com.example.demo2.core.service.EmployeeDeleteService;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
 import com.example.demo2.core.service.EmployeeServiceImpl;
@@ -27,14 +28,11 @@ public class EmployeeDeleteController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeDeleteController.class);
 
-    private final EmployeeServiceImpl employeeServiceImpl;
-    private final JsonResponseService responseService;
+    private final EmployeeDeleteService employeeDeleteService;
 
     @Autowired
-    public EmployeeDeleteController(EmployeeServiceImpl employeeServiceImpl,
-                                    JsonResponseService responseService) {
-        this.employeeServiceImpl = employeeServiceImpl;
-        this.responseService = responseService;
+    public EmployeeDeleteController(EmployeeDeleteService employeeDeleteService) {
+        this.employeeDeleteService = employeeDeleteService;
     }
 
     @Operation(
@@ -74,22 +72,9 @@ public class EmployeeDeleteController {
             @PathVariable String username,
             HttpServletRequest request) {
 
-        final String correlationId = (String) request.getAttribute("correlationId");
-        logger.info("Received delete request for employee '{}'. CorrelationId: {}", username, correlationId);
+        final String CORRELATION_ID = (String) request.getAttribute("correlationId");
+        logger.info("Received delete request for employee '{}'. CorrelationId: {}", username, CORRELATION_ID);
 
-        boolean exists = employeeServiceImpl.employeeExists(username);
-        if (!exists) {
-            logger.error("Employee '{}' not found. CorrelationId: {}", username, correlationId);
-            return responseService.notFoundResponse(correlationId);
-        }
-
-        employeeServiceImpl.deleteEmployee(username);
-        logger.info("Employee '{}' deleted successfully. CorrelationId: {}", username, correlationId);
-
-        return ResponseEntity.ok(new SuccessResponse(
-                "success",
-                "Employee deleted successfully",
-                correlationId
-        ));
+        return employeeDeleteService.deleteEmployee(username, CORRELATION_ID);
     }
 }

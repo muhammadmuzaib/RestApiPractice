@@ -1,10 +1,8 @@
 package com.example.demo2.shell.controller;
 
+import com.example.demo2.core.service.EmployeeInfoService;
 import com.example.demo2.shell.dto.response.EmployeeInfoResponse;
 import com.example.demo2.shell.dto.response.ErrorResponse;
-import com.example.demo2.core.model.Employee;
-import com.example.demo2.core.service.EmployeeServiceImpl;
-import com.example.demo2.core.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -25,14 +23,11 @@ public class EmployeeInfoController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeInfoController.class);
 
-    private final EmployeeServiceImpl employeeServiceImpl;
-    private final JsonResponseService responseService;
+    private final EmployeeInfoService employeeInfoService;
 
     @Autowired
-    public EmployeeInfoController(EmployeeServiceImpl employeeServiceImpl,
-                                  JsonResponseService responseService) {
-        this.employeeServiceImpl = employeeServiceImpl;
-        this.responseService = responseService;
+    public EmployeeInfoController(EmployeeInfoService employeeInfoService) {
+        this.employeeInfoService = employeeInfoService;
     }
 
     @Operation(
@@ -76,24 +71,9 @@ public class EmployeeInfoController {
             @PathVariable String username,
             HttpServletRequest request) {
 
-        String correlationId = (String) request.getAttribute("correlationId");
-        logger.info("Received request to get employee info for username: {}. CorrelationId: {}", username, correlationId);
+        final String CORRELATION_ID = (String) request.getAttribute("correlationId");
+        logger.info("Received request to get employee info for username: {}. CorrelationId: {}", username, CORRELATION_ID);
 
-        Employee employee = employeeServiceImpl.getEmployeeByUsername(username);
-
-        if (employee == null) {
-            logger.error("Employee not found for username: {}. CorrelationId: {}", username, correlationId);
-            return responseService.notFoundResponse(correlationId);
-        }
-
-        logger.info("Employee found: {} {}. CorrelationId: {}", employee.getFirstName(), employee.getLastName(), correlationId);
-
-        EmployeeInfoResponse response = new EmployeeInfoResponse(
-                employee.getFirstName(),
-                employee.getLastName(),
-                correlationId
-        );
-
-        return ResponseEntity.ok(response);
+        return employeeInfoService.retrieveEmployeeInfo(username, CORRELATION_ID);
     }
 }
