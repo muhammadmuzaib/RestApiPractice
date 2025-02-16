@@ -1,5 +1,6 @@
 package com.example.demo2.steps.config.steps.util;
 
+import com.example.demo2.core.model.Employee;
 import com.example.demo2.core.service.EmployeeServiceImpl;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -14,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
+import static com.example.demo2.shell.constants.AppConstants.BASE_URL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -23,7 +25,6 @@ public class CommonSteps {
 
     private final ScenarioContext scenarioContext;
     private final EmployeeServiceImpl employeeServiceImpl;
-    private final String BASE_URL = "http://localhost:8080";
 
     @Autowired
     public CommonSteps(ScenarioContext scenarioContext, EmployeeServiceImpl employeeServiceImpl) {
@@ -34,7 +35,8 @@ public class CommonSteps {
     @Given("an employee exists with username {string}")
     public void anEmployeeExistsWithUsername(String username) {
         if (!employeeServiceImpl.employeeExists(username)) {
-            employeeServiceImpl.createEmployee(username, "defaultPassword", "DefaultFirstName", "DefaultLastName");
+            Employee employee = new Employee(username, "defaultPassword", "DefaultFirstName", "DefaultLastName");
+            employeeServiceImpl.createEmployee(employee);
         }
     }
 

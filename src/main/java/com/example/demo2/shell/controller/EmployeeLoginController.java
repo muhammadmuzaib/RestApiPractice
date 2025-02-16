@@ -1,11 +1,11 @@
 package com.example.demo2.shell.controller;
 
-import com.example.demo2.core.service.AuthenticationService;
-import com.example.demo2.core.service.DtoConversionService;
-import com.example.demo2.core.service.SchemaValidationService;
+import com.example.demo2.core.service.AuthenticationServiceImpl;
+import com.example.demo2.core.service.DtoConversionServiceImpl;
+import com.example.demo2.core.service.SchemaValidationServiceImpl;
 import com.example.demo2.shell.dto.request.EmployeeLoginRequestDto;
 import com.example.demo2.shell.dto.response.LoginSuccessResponse;
-import com.example.demo2.core.service.JsonResponseService;
+import com.example.demo2.core.service.JsonResponseServiceImpl;
 import com.networknt.schema.JsonSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import org.springframework.web.bind.annotation.*;
 
+import static com.example.demo2.shell.constants.AppConstants.CORRELATION_ID_CONSTANT;
 
 
 @RestController
@@ -34,26 +35,26 @@ public class EmployeeLoginController {
     private static final Logger logger = LogManager.getLogger(EmployeeLoginController.class);
     private static final String SCHEMA_PATH = "/schemas/login-schema.json";
 
-    private final SchemaValidationService schemaValidator;
-    private JsonResponseService responseService;
-    private final AuthenticationService authenticationService;
-    private final DtoConversionService dtoConversionService;
-    private final SchemaValidationService schemaValidationService;
+    private final SchemaValidationServiceImpl schemaValidator;
+    private JsonResponseServiceImpl responseService;
+    private final AuthenticationServiceImpl authenticationServiceImpl;
+    private final DtoConversionServiceImpl dtoConversionServiceImpl;
+    private final SchemaValidationServiceImpl schemaValidationServiceImpl;
 
     private JsonSchema loginSchema;
 
     @Autowired
-    public EmployeeLoginController(JsonResponseService responseService,
-                                   SchemaValidationService schemaValidator,
-                                   AuthenticationService authenticationService,
-                                   DtoConversionService dtoConversionService,
-                                   SchemaValidationService schemaValidationService
+    public EmployeeLoginController(JsonResponseServiceImpl responseService,
+                                   SchemaValidationServiceImpl schemaValidator,
+                                   AuthenticationServiceImpl authenticationServiceImpl,
+                                   DtoConversionServiceImpl dtoConversionServiceImpl,
+                                   SchemaValidationServiceImpl schemaValidationServiceImpl
                                    ) {
         this.responseService = responseService;
         this.schemaValidator = schemaValidator;
-        this.authenticationService = authenticationService;
-        this.dtoConversionService = dtoConversionService;
-        this.schemaValidationService = schemaValidationService;
+        this.authenticationServiceImpl = authenticationServiceImpl;
+        this.dtoConversionServiceImpl = dtoConversionServiceImpl;
+        this.schemaValidationServiceImpl = schemaValidationServiceImpl;
     }
 
     @PostConstruct
@@ -81,42 +82,40 @@ public class EmployeeLoginController {
                     )
             }
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "User authenticated successfully",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = LoginSuccessResponse.class)
-                    ),
-                    headers = {
-                            @Header(
-                                    name = "Content-Type",
-                                    description = "Request media type",
-                                    schema = @Schema(
-                                            type = "string",
-                                            example = "application/json"
-                                    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "User authenticated successfully",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = LoginSuccessResponse.class)
+            ),
+            headers = {
+                    @Header(
+                            name = "Content-Type",
+                            description = "Request media type",
+                            schema = @Schema(
+                                    type = "string",
+                                    example = "application/json"
                             )
-                    }
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request data (JSON schema validation error or parse error)",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
                     )
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Invalid credentials",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
+            }
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data (JSON schema validation error or parse error)",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
             )
-    })
+    )
+    @ApiResponse(
+            responseCode = "401",
+            description = "Invalid credentials",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
+            )
+    )
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -134,21 +133,19 @@ public class EmployeeLoginController {
             )
             @RequestBody String rawJson,
             HttpServletRequest httpRequest) {
-        final String CORRELATION_ID = (String) httpRequest.getAttribute("correlationId");
+        final String CORRELATION_ID = (String) httpRequest.getAttribute(CORRELATION_ID_CONSTANT);
         logger.info("Login request recieved. Correlation ID: {}", CORRELATION_ID);
 
-        // Validation
-        ResponseEntity<?> validationError = schemaValidationService.validateRequest(rawJson, CORRELATION_ID, loginSchema);
+        ResponseEntity<?> validationError = schemaValidationServiceImpl.validateRequest(rawJson, CORRELATION_ID, loginSchema);
         if (validationError != null) {
             return validationError;
         }
 
-        // DTO Conversion
-        EmployeeLoginRequestDto requestDto = dtoConversionService.convertToDto(rawJson, CORRELATION_ID, EmployeeLoginRequestDto.class);
+        EmployeeLoginRequestDto requestDto = dtoConversionServiceImpl.convertToDto(rawJson, CORRELATION_ID, EmployeeLoginRequestDto.class);
         if (requestDto == null) {
             return responseService.parseErrorResponse(CORRELATION_ID);
         }
 
-        return authenticationService.handleAuthentication(requestDto, CORRELATION_ID);
+        return authenticationServiceImpl.handleAuthentication(requestDto, CORRELATION_ID);
     }
 }

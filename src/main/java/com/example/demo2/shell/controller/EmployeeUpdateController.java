@@ -1,13 +1,10 @@
 package com.example.demo2.shell.controller;
 
 import com.example.demo2.core.service.*;
-import com.example.demo2.shell.dto.request.EmployeeCreateRequestDto;
 import com.example.demo2.shell.dto.request.EmployeeUpdateRequestDto;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
-import com.example.demo2.core.model.Employee;
 import com.networknt.schema.JsonSchema;
-import com.networknt.schema.ValidationMessage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -15,7 +12,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
@@ -23,6 +19,8 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import static com.example.demo2.shell.constants.AppConstants.CORRELATION_ID_CONSTANT;
 
 
 @RestController
@@ -33,22 +31,22 @@ public class EmployeeUpdateController {
 
     private static final String UPDATE_SCHEMA = "/schemas/employee-update-schema.json";
 
-    private final SchemaValidationService schemaValidator;
-    private final JsonResponseService responseService;
-    private final DtoConversionService dtoConversionService;
-    private final EmployeeUpdateService employeeUpdateService;
+    private final SchemaValidationServiceImpl schemaValidator;
+    private final JsonResponseServiceImpl responseService;
+    private final DtoConversionServiceImpl dtoConversionServiceImpl;
+    private final EmployeeUpdateServiceImpl employeeUpdateServiceImpl;
 
     private JsonSchema updateSchema;
 
     @Autowired
-    public EmployeeUpdateController(SchemaValidationService schemaValidator,
-                                    JsonResponseService responseService,
-                                    DtoConversionService dtoConversionService,
-                                    EmployeeUpdateService employeeUpdateService) {
+    public EmployeeUpdateController(SchemaValidationServiceImpl schemaValidator,
+                                    JsonResponseServiceImpl responseService,
+                                    DtoConversionServiceImpl dtoConversionServiceImpl,
+                                    EmployeeUpdateServiceImpl employeeUpdateServiceImpl) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
-        this.dtoConversionService = dtoConversionService;
-        this.employeeUpdateService = employeeUpdateService;
+        this.dtoConversionServiceImpl = dtoConversionServiceImpl;
+        this.employeeUpdateServiceImpl = employeeUpdateServiceImpl;
     }
 
     @PostConstruct
@@ -82,26 +80,24 @@ public class EmployeeUpdateController {
                     )
             }
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employee updated",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = SuccessResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "Invalid request data",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Employee not found",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
+    @ApiResponse(responseCode = "200", description = "Employee updated",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponse.class)
             )
-    })
+    )
+    @ApiResponse(responseCode = "400", description = "Invalid request data",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
+            )
+    )
+    @ApiResponse(responseCode = "404", description = "Employee not found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
+            )
+    )
     @PostMapping("/update/{username}")
     public ResponseEntity<?> updateEmployee(
             @PathVariable String username,
@@ -121,23 +117,19 @@ public class EmployeeUpdateController {
             @RequestBody String rawJson,
             HttpServletRequest request) {
 
-        final String correlationId = (String) request.getAttribute("correlationId");
+        final String correlationId = (String) request.getAttribute(CORRELATION_ID_CONSTANT);
         logger.info("Received update employee request for username: {}. CorrelationId: {}", username, correlationId);
 
-
-        // 1. Schema Validation
         ResponseEntity<?> validationError = schemaValidator.validateRequest(rawJson, correlationId, updateSchema);
         if (validationError != null) {
             return validationError;
         }
 
-        // 2. DTO Conversion
-        EmployeeUpdateRequestDto requestDto = dtoConversionService.convertToDto(rawJson, correlationId, EmployeeUpdateRequestDto.class);
+        EmployeeUpdateRequestDto requestDto = dtoConversionServiceImpl.convertToDto(rawJson, correlationId, EmployeeUpdateRequestDto.class);
         if (requestDto == null) {
             return responseService.parseErrorResponse(correlationId);
         }
 
-        // 3. Business Logic: Handle the update
-        return employeeUpdateService.handleEmployeeUpdate(username, requestDto, correlationId);
+        return employeeUpdateServiceImpl.handleEmployeeUpdate(username, requestDto, correlationId);
     }
 }

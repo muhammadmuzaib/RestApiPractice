@@ -1,5 +1,6 @@
 package com.example.demo2.core.service;
 
+import com.example.demo2.shell.errors.EmployeeNotFoundException;
 import com.example.demo2.shell.dto.request.EmployeeUpdateRequestDto;
 import com.example.demo2.core.model.Employee;
 import com.example.demo2.shell.service.EmployeeService;
@@ -27,6 +28,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         logger.debug("Default employees added: {}", employees);
     }
 
+    @Override
     public boolean isValidEmployee(String username, String password, String correlationId) {
         logger.info("Validating credentials for username: {}. CorrelationId: {}", username, correlationId);
         boolean isValid = employees.stream()
@@ -41,6 +43,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         return isValid;
     }
 
+    @Override
     public Employee getEmployeeByUsername(String username) {
         logger.info("Retrieving employee by username: {}", username);
         Employee employee = employees.stream()
@@ -56,50 +59,61 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employee;
     }
 
+    @Override
     public boolean employeeExists(String username) {
         logger.info("Checking existence of employee with username: {}", username);
         boolean exists = employees.stream()
                 .anyMatch(e -> e.getUsername().equalsIgnoreCase(username));
-        logger.debug("Employee exists: {} for username: {}", exists, username);
+        logger.info("Employee exists: {} for username: {}", exists, username);
         return exists;
     }
 
-    public void createEmployee(String username, String password, String firstName, String lastName) {
-        logger.info("Creating employee with username: {}", username);
-        employees.add(new Employee(username, password, firstName, lastName));
-        logger.debug("Employee created: {}", getEmployeeByUsername(username));
+    @Override
+    public void createEmployee(Employee employee) {
+        logger.info("Creating employee with username: {}", employee.getUsername());
+        employees.add(new Employee(employee.getUsername(),
+                employee.getPassword(),
+                employee.getFirstName(),
+                employee.getLastName()));
+        logger.info("Employee created: {}", getEmployeeByUsername(employee.getUsername()));
     }
 
+
+    @Override
     public void updateEmployee(String username, EmployeeUpdateRequestDto updateRequest) {
         logger.info("Updating employee details for username: {}", username);
         Employee employee = getEmployeeByUsername(username);
         if (employee == null) {
-            logger.warn("Update failed. Employee not found for username: {}", username);
-            return;
+            String errMsg = "Update failed. Employee not found for username: " + username;
+            logger.error(errMsg);
+            throw new EmployeeNotFoundException(errMsg);
         }
 
         if (updateRequest.getPassword() != null) {
-            logger.debug("Updating password for employee: {}", username);
+            logger.info("Updating password for employee: {}", username);
             employee.setPassword(updateRequest.getPassword());
         }
         if (updateRequest.getFirstName() != null) {
-            logger.debug("Updating first name for employee: {}", username);
+            logger.info("Updating first name for employee: {}", username);
             employee.setFirstName(updateRequest.getFirstName());
         }
         if (updateRequest.getLastName() != null) {
-            logger.debug("Updating last name for employee: {}", username);
+            logger.info("Updating last name for employee: {}", username);
             employee.setLastName(updateRequest.getLastName());
         }
         logger.info("Employee updated successfully for username: {}", username);
     }
 
+    @Override
     public void deleteEmployee(String username) {
         logger.info("Deleting employee with username: {}", username);
         boolean removed = employees.removeIf(e -> e.getUsername().equalsIgnoreCase(username));
         if (removed) {
             logger.info("Employee deleted successfully for username: {}", username);
         } else {
-            logger.error("Deletion failed. Employee not found for username: {}", username);
+            String errMsg = "Deletion failed. Employee not found for username: " + username;
+            logger.error(errMsg);
+            throw new EmployeeNotFoundException(errMsg);
         }
     }
 }

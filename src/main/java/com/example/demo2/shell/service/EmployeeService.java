@@ -11,7 +11,7 @@ public interface EmployeeService {
 
     boolean employeeExists(String username);
 
-    void createEmployee(String username, String password, String firstName, String lastName);
+    void createEmployee(Employee employee);
 
     void updateEmployee(String username, EmployeeUpdateRequestDto updateRequest);
 

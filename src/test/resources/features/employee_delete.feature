@@ -1,8 +1,8 @@
 Feature: Employee Deletion API
 
   Scenario: Successfully delete an existing employee
-    Given an employee exists with username "user1"
-    When the client sends a DELETE request to "/api/employee/delete/user1"
+    Given an employee exists with username "admin"
+    When the client sends a DELETE request to "/api/employee/delete/admin"
     Then the response status code should be 200
     And the response body should contain "Employee deleted successfully"
 

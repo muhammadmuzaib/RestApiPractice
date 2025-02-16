@@ -4,14 +4,16 @@ package com.example.demo2.shell.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 @Schema(name = "EmployeeLoginRequestDto")
 public class EmployeeLoginRequestDto {
 
-    @Schema(required = true, example = "admin", description = "Employee username")
+    @Schema(requiredMode = REQUIRED, example = "admin", description = "Employee username")
     @NotBlank(message = "Username required")
     private String username;
 
-    @Schema(required = true, example = "password", description = "Employee password")
+    @Schema(requiredMode = REQUIRED, example = "password", description = "Employee password")
     @NotBlank(message = "Password required")
     private String password;
 

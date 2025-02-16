@@ -9,10 +9,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
+import static com.example.demo2.shell.constants.AppConstants.BASE_URL;
+
 public class EmployeeDeleteSteps {
 
     private final ScenarioContext scenarioContext;
-    private final String BASE_URL = "http://localhost:8080";
 
     @Autowired
     public EmployeeDeleteSteps(ScenarioContext scenarioContext) {

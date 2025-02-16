@@ -1,10 +1,8 @@
 package com.example.demo2.shell.controller;
 
-import com.example.demo2.core.service.EmployeeDeleteService;
+import com.example.demo2.core.service.EmployeeDeleteServiceImpl;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
-import com.example.demo2.core.service.EmployeeServiceImpl;
-import com.example.demo2.core.service.JsonResponseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -28,11 +26,11 @@ public class EmployeeDeleteController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeDeleteController.class);
 
-    private final EmployeeDeleteService employeeDeleteService;
+    private final EmployeeDeleteServiceImpl employeeDeleteServiceImpl;
 
     @Autowired
-    public EmployeeDeleteController(EmployeeDeleteService employeeDeleteService) {
-        this.employeeDeleteService = employeeDeleteService;
+    public EmployeeDeleteController(EmployeeDeleteServiceImpl employeeDeleteServiceImpl) {
+        this.employeeDeleteServiceImpl = employeeDeleteServiceImpl;
     }
 
     @Operation(
@@ -53,20 +51,18 @@ public class EmployeeDeleteController {
                     )
             }
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employee deleted",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = SuccessResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "404", description = "Employee not found",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
+    @ApiResponse(responseCode = "200", description = "Employee deleted",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponse.class)
             )
-    })
+    )
+    @ApiResponse(responseCode = "404", description = "Employee not found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
+            )
+    )
     @DeleteMapping("/delete/{username}")
     public ResponseEntity<?> deleteEmployee(
             @PathVariable String username,
@@ -75,6 +71,6 @@ public class EmployeeDeleteController {
         final String CORRELATION_ID = (String) request.getAttribute("correlationId");
         logger.info("Received delete request for employee '{}'. CorrelationId: {}", username, CORRELATION_ID);
 
-        return employeeDeleteService.deleteEmployee(username, CORRELATION_ID);
+        return employeeDeleteServiceImpl.deleteEmployee(username, CORRELATION_ID);
     }
 }

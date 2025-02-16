@@ -12,6 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
+import static com.example.demo2.shell.constants.AppConstants.BASE_URL;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 
@@ -19,13 +20,10 @@ import static org.hamcrest.Matchers.containsString;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class EmployeeInfoSteps {
     private final ScenarioContext scenarioContext;
-    private final EmployeeServiceImpl employeeServiceImpl;
-    private final String BASE_URL = "http://localhost:8080";
 
     @Autowired
-    public EmployeeInfoSteps(ScenarioContext scenarioContext, EmployeeServiceImpl employeeServiceImpl) {
+    public EmployeeInfoSteps(ScenarioContext scenarioContext) {
         this.scenarioContext = scenarioContext;
-        this.employeeServiceImpl = employeeServiceImpl;
     }
 
     @When("the client sends a GET request to {string}")

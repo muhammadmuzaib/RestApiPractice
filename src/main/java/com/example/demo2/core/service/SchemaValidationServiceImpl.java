@@ -1,5 +1,9 @@
 package com.example.demo2.core.service;
 
+import com.example.demo2.shell.errors.JsonValidationException;
+import com.example.demo2.shell.errors.SchemaLoadException;
+import com.example.demo2.shell.dto.response.ErrorResponse;
+import com.example.demo2.shell.service.SchemaValidationService;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -17,20 +21,21 @@ import java.io.InputStream;
 import java.util.Set;
 
 @Service
-public class SchemaValidationService {
+public class SchemaValidationServiceImpl implements SchemaValidationService {
 
-    private static final Logger logger = LogManager.getLogger(SchemaValidationService.class);
+    private static final Logger logger = LogManager.getLogger(SchemaValidationServiceImpl.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final JsonResponseService responseService;
+    private final JsonResponseServiceImpl responseService;
 
 
     @Autowired
-    public SchemaValidationService(JsonResponseService responseService) throws IOException {
+    public SchemaValidationServiceImpl(JsonResponseServiceImpl responseService) throws IOException {
         this.responseService = responseService;
     }
 
-    public ResponseEntity<?> validateRequest(String rawJson, String correlationId, JsonSchema schema) {
+    @Override
+    public ResponseEntity<ErrorResponse> validateRequest(String rawJson, String correlationId, JsonSchema schema) {
         Set<ValidationMessage> errors = validate(schema, rawJson);
         if (!errors.isEmpty()) {
             logger.error("Validation errors for correlationId {}: {}", correlationId, errors);
@@ -39,7 +44,8 @@ public class SchemaValidationService {
         return null;
     }
 
-    public JsonSchema loadSchema(String schemaPath) throws IOException {
+    @Override
+    public JsonSchema loadSchema(String schemaPath) throws SchemaLoadException {
         logger.info("Loading schema from path: {}", schemaPath);
         try (InputStream schemaStream = getClass().getResourceAsStream(schemaPath)) {
             if (schemaStream == null) {
@@ -49,9 +55,13 @@ public class SchemaValidationService {
             JsonNode schemaNode = objectMapper.readTree(schemaStream);
             logger.info("Schema loaded successfully from path: {}", schemaPath);
             return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909).getSchema(schemaNode);
+        } catch (IOException e) {
+            logger.error("IOException occurred while loading schema from path: {}", schemaPath, e);
+            throw new SchemaLoadException("Error loading schema from: " + schemaPath, e);
         }
     }
 
+    @Override
     public Set<ValidationMessage> validate(JsonSchema schema, String rawJson) {
         logger.debug("Validating JSON payload: {}", rawJson);
         try {
@@ -64,7 +74,7 @@ public class SchemaValidationService {
             return messages;
         } catch (Exception e) {
             logger.error("JSON validation failed.", e);
-            throw new RuntimeException("JSON validation failed", e);
+            throw new JsonValidationException("JSON validation failed", e);
         }
     }
 }

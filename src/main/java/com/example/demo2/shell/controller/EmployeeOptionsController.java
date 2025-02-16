@@ -1,6 +1,7 @@
 package com.example.demo2.shell.controller;
 
-import com.example.demo2.core.service.EmployeeOptionsService;
+import com.example.demo2.core.service.EmployeeOptionsServiceImpl;
+import com.example.demo2.shell.errors.EmployeeMethodsNotFound;
 import com.example.demo2.shell.dto.response.HttpMethodInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,11 +25,12 @@ public class EmployeeOptionsController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeOptionsController.class);
 
-    private final EmployeeOptionsService employeeMethodService;
+    private final EmployeeOptionsServiceImpl employeeMethodService;
 
     @Autowired
-    public EmployeeOptionsController(EmployeeOptionsService employeeMethodService) {
+    public EmployeeOptionsController(EmployeeOptionsServiceImpl employeeMethodService) {
         this.employeeMethodService = employeeMethodService;
+        logger.info("EmployeeOptionsController initialized");
     }
 
     @Operation(
@@ -53,6 +55,14 @@ public class EmployeeOptionsController {
     )
     @RequestMapping(method = RequestMethod.OPTIONS)
     public ResponseEntity<List<HttpMethodInfo>> getSupportedMethods() {
-        return employeeMethodService.ListSupportedMethods();
+        logger.info("Received request to list supported HTTP methods");
+        ResponseEntity<List<HttpMethodInfo>> response = employeeMethodService.listSupportedMethods();
+        if (response.getBody() != null) {
+            logger.info("Returning {} supported methods", response.getBody().size());
+        } else {
+            logger.error("No supported methods found");
+            throw new EmployeeMethodsNotFound("No supported methods found");
+        }
+        return response;
     }
 }

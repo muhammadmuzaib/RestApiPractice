@@ -2,6 +2,7 @@ package com.example.demo2.core.service;
 
 import com.example.demo2.shell.dto.request.EmployeeLoginRequestDto;
 import com.example.demo2.shell.dto.response.LoginSuccessResponse;
+import com.example.demo2.shell.service.AuthenticationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,17 +13,18 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class AuthenticationService {
+public class AuthenticationServiceImpl implements AuthenticationService {
 
-    private static final Logger logger = LogManager.getLogger(AuthenticationService.class);
+    private static final Logger logger = LogManager.getLogger(AuthenticationServiceImpl.class);
 
     private final EmployeeServiceImpl employeeServiceImpl;
 
     @Autowired
-    public AuthenticationService(EmployeeServiceImpl employeeServiceImpl) {
+    public AuthenticationServiceImpl(EmployeeServiceImpl employeeServiceImpl) {
         this.employeeServiceImpl = employeeServiceImpl;
     }
 
+    @Override
     public ResponseEntity<?> handleAuthentication(EmployeeLoginRequestDto request, String correlationId) {
         logger.info("Attempting authentication for user: {}, Correlation ID: {}", request.getUsername(), correlationId);
         boolean isAuthenticated = authenticateUser(
@@ -45,7 +47,7 @@ public class AuthenticationService {
         }
     }
 
-    public boolean authenticateUser(String username, String password, String correlationId) {
+    private boolean authenticateUser(String username, String password, String correlationId) {
         logger.info("Authenticating user: {}. Correlation ID: {}", username, correlationId);
         return employeeServiceImpl.isValidEmployee(username, password, correlationId);
     }

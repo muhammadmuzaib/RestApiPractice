@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.UUID;
 
+import static com.example.demo2.shell.constants.AppConstants.CORRELATION_ID_CONSTANT;
+
 @Component
 public class RequestHeaderFilter implements Filter {
 
@@ -33,7 +35,6 @@ public class RequestHeaderFilter implements Filter {
             return;
         }
 
-        // Content-Type
         String method = httpRequest.getMethod();
         if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
             String contentType = httpRequest.getHeader(HttpHeaders.CONTENT_TYPE);
@@ -43,18 +44,17 @@ public class RequestHeaderFilter implements Filter {
             }
         }
 
-        // corelation id
-        String correlationId = httpRequest.getHeader("correlationId");
-        if (correlationId == null || correlationId.isEmpty()) {
-            correlationId = UUID.randomUUID().toString();
+        String CORRELATION_ID = httpRequest.getHeader(CORRELATION_ID_CONSTANT);
+        if (CORRELATION_ID == null || CORRELATION_ID.isEmpty()) {
+            CORRELATION_ID = UUID.randomUUID().toString();
         }
 
-        httpRequest.setAttribute("correlationId", correlationId);
+        httpRequest.setAttribute(CORRELATION_ID_CONSTANT, CORRELATION_ID);
 
         //date
         httpResponse.setHeader(HttpHeaders.DATE, Instant.now().toString());
 
-        httpResponse.setHeader("correlationId", correlationId);
+        httpResponse.setHeader(CORRELATION_ID_CONSTANT, CORRELATION_ID);
 
         chain.doFilter(request, response);
     }

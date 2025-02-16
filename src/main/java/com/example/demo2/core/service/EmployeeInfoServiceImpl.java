@@ -2,6 +2,7 @@ package com.example.demo2.core.service;
 
 import com.example.demo2.core.model.Employee;
 import com.example.demo2.shell.dto.response.EmployeeInfoResponse;
+import com.example.demo2.shell.service.EmployeeInfoService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,27 +10,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
-public class EmployeeInfoService {
+public class EmployeeInfoServiceImpl implements EmployeeInfoService {
 
-    private static final Logger logger = LogManager.getLogger(EmployeeInfoService.class);
+    private static final Logger logger = LogManager.getLogger(EmployeeInfoServiceImpl.class);
 
     private final EmployeeServiceImpl employeeServiceImpl;
-    private final JsonResponseService responseService;
+    private final JsonResponseServiceImpl responseService;
 
     @Autowired
-    public EmployeeInfoService(EmployeeServiceImpl employeeServiceImpl,
-                               JsonResponseService responseService) {
+    public EmployeeInfoServiceImpl(EmployeeServiceImpl employeeServiceImpl,
+                                   JsonResponseServiceImpl responseService) {
         this.employeeServiceImpl = employeeServiceImpl;
         this.responseService = responseService;
     }
 
-    /**
-     * Retrieves employee information and builds a ResponseEntity.
-     *
-     * @param username      the employee's username
-     * @param correlationId the correlation ID for logging and tracking
-     * @return a ResponseEntity containing either the employee info or an error response
-     */
+    @Override
     public ResponseEntity<?> retrieveEmployeeInfo(String username, String correlationId) {
         logger.info("Processing request for username: {}. CorrelationId: {}", username, correlationId);
 

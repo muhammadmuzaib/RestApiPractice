@@ -8,11 +8,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 
+import static com.example.demo2.shell.constants.AppConstants.BASE_URL;
+
 
 public class EmployeeCreationSteps {
 
     private final ScenarioContext scenarioContext;
-    private final String BASE_URL = "http://localhost:8080";
 
     public EmployeeCreationSteps(ScenarioContext scenarioContext) {
         this.scenarioContext = scenarioContext;

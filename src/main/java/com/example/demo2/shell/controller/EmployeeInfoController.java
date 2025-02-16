@@ -1,6 +1,6 @@
 package com.example.demo2.shell.controller;
 
-import com.example.demo2.core.service.EmployeeInfoService;
+import com.example.demo2.core.service.EmployeeInfoServiceImpl;
 import com.example.demo2.shell.dto.response.EmployeeInfoResponse;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,17 +17,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import static com.example.demo2.shell.constants.AppConstants.CORRELATION_ID_CONSTANT;
+
 @RestController
 @RequestMapping("/api/employee")
 public class EmployeeInfoController {
 
     private static final Logger logger = LogManager.getLogger(EmployeeInfoController.class);
 
-    private final EmployeeInfoService employeeInfoService;
+    private final EmployeeInfoServiceImpl employeeInfoServiceImpl;
 
     @Autowired
-    public EmployeeInfoController(EmployeeInfoService employeeInfoService) {
-        this.employeeInfoService = employeeInfoService;
+    public EmployeeInfoController(EmployeeInfoServiceImpl employeeInfoServiceImpl) {
+        this.employeeInfoServiceImpl = employeeInfoServiceImpl;
     }
 
     @Operation(
@@ -48,32 +50,30 @@ public class EmployeeInfoController {
                     )
             }
     )
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Employee found",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = EmployeeInfoResponse.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Employee not found",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Employee found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = EmployeeInfoResponse.class)
             )
-    })
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "Employee not found",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
+            )
+    )
     @GetMapping("/get-info/{username}")
     public ResponseEntity<?> getEmployeeInfo(
             @PathVariable String username,
             HttpServletRequest request) {
 
-        final String CORRELATION_ID = (String) request.getAttribute("correlationId");
+        final String CORRELATION_ID = (String) request.getAttribute(CORRELATION_ID_CONSTANT);
         logger.info("Received request to get employee info for username: {}. CorrelationId: {}", username, CORRELATION_ID);
 
-        return employeeInfoService.retrieveEmployeeInfo(username, CORRELATION_ID);
+        return employeeInfoServiceImpl.retrieveEmployeeInfo(username, CORRELATION_ID);
     }
 }

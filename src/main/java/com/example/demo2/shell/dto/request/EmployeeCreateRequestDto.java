@@ -2,16 +2,18 @@ package com.example.demo2.shell.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+import static io.swagger.v3.oas.annotations.media.Schema.RequiredMode.REQUIRED;
+
 @Schema(name = "EmployeeCreateRequest")
 public class EmployeeCreateRequestDto {
 
-    @Schema(required = true, example = "password", description = "Employee password")
+    @Schema(requiredMode = REQUIRED, example = "password", description = "Employee password")
     private String password;
 
-    @Schema(required = true, example = "John", description = "First name")
+    @Schema(requiredMode = REQUIRED, example = "John", description = "First name")
     private String firstName;
 
-    @Schema(required = true, example = "Doe", description = "Last name")
+    @Schema(requiredMode = REQUIRED, example = "Doe", description = "Last name")
     private String lastName;
 
     public String getPassword() {

@@ -1,7 +1,6 @@
 package com.example.demo2.steps.config.steps;
 
 import com.example.demo2.core.service.EmployeeServiceImpl;
-import com.example.demo2.steps.config.steps.util.ScenarioContext;
 import io.cucumber.java.en.Given;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -10,13 +9,10 @@ import java.util.UUID;
 
 public class EmployeeLoginSteps {
 
-    private final ScenarioContext scenarioContext;
     private final EmployeeServiceImpl employeeServiceImpl;
-    private final String BASE_URL = "http://localhost:8080";
 
     @Autowired
-    public EmployeeLoginSteps(ScenarioContext scenarioContext, EmployeeServiceImpl employeeServiceImpl) {
-        this.scenarioContext = scenarioContext;
+    public EmployeeLoginSteps(EmployeeServiceImpl employeeServiceImpl) {
         this.employeeServiceImpl = employeeServiceImpl;
     }
 

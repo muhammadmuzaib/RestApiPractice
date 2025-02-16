@@ -4,6 +4,7 @@ import com.example.demo2.core.service.*;
 import com.example.demo2.shell.dto.request.EmployeeCreateRequestDto;
 import com.example.demo2.shell.dto.response.ErrorResponse;
 import com.example.demo2.shell.dto.response.SuccessResponse;
+import com.example.demo2.shell.errors.SchemaLoadException;
 import com.networknt.schema.JsonSchema;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -21,6 +22,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
+import static com.example.demo2.shell.constants.AppConstants.CORRELATION_ID_CONSTANT;
+
 
 @RestController
 @RequestMapping("/api/employee")
@@ -30,26 +35,26 @@ public class EmployeeCreationController {
 
     private static final String CREATE_SCHEMA = "/schemas/employee-create-schema.json";
 
-    private final SchemaValidationService schemaValidator;
-    private final JsonResponseService responseService;
-    private final EmployeeCreationService employeeCreationService;
-    private final DtoConversionService dtoConversionService;
+    private final SchemaValidationServiceImpl schemaValidator;
+    private final JsonResponseServiceImpl responseService;
+    private final EmployeeCreationServiceImpl employeeCreationServiceImpl;
+    private final DtoConversionServiceImpl dtoConversionServiceImpl;
 
     private JsonSchema createSchema;
 
     @Autowired
-    public EmployeeCreationController(SchemaValidationService schemaValidator,
-                                      JsonResponseService responseService,
-                                      EmployeeCreationService employeeCreationService,
-                                      DtoConversionService dtoConversionService) {
+    public EmployeeCreationController(SchemaValidationServiceImpl schemaValidator,
+                                      JsonResponseServiceImpl responseService,
+                                      EmployeeCreationServiceImpl employeeCreationServiceImpl,
+                                      DtoConversionServiceImpl dtoConversionServiceImpl) {
         this.schemaValidator = schemaValidator;
         this.responseService = responseService;
-        this.employeeCreationService = employeeCreationService;
-        this.dtoConversionService = dtoConversionService;
+        this.employeeCreationServiceImpl = employeeCreationServiceImpl;
+        this.dtoConversionServiceImpl = dtoConversionServiceImpl;
     }
 
     @PostConstruct
-    public void init() throws Exception {
+    public void init() throws SchemaLoadException {
         logger.info("Initializing EmployeeCreationController. Loading schemas...");
         this.createSchema = schemaValidator.loadSchema(CREATE_SCHEMA);
         logger.info("Schemas loaded successfully: CREATE_SCHEMA={}", CREATE_SCHEMA);
@@ -66,26 +71,24 @@ public class EmployeeCreationController {
                     @Parameter(name = "Content-Type", description = "Content type of the request body", example = "application/json", in = ParameterIn.HEADER)
             }
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Employee created",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = SuccessResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "400", description = "Invalid request data",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
-            ),
-            @ApiResponse(responseCode = "409", description = "Employee already exists",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)
-                    )
+    @ApiResponse(responseCode = "200", description = "Employee created",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = SuccessResponse.class)
             )
-    })
+    )
+    @ApiResponse(responseCode = "400", description = "Invalid request data",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
+            )
+    )
+    @ApiResponse(responseCode = "409", description = "Employee already exists",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class)
+            )
+    )
     @PutMapping("/create/{username}")
     public ResponseEntity<?> createEmployee(
             @PathVariable String username,
@@ -105,22 +108,19 @@ public class EmployeeCreationController {
             @RequestBody String rawJson,
             HttpServletRequest request) {
 
-        final String CORRELATION_ID = (String) request.getAttribute("correlationId");
+        final String CORRELATION_ID = (String) request.getAttribute(CORRELATION_ID_CONSTANT);
         logger.info("Received create employee request for username: {}. CorrelationId: {}", username, CORRELATION_ID);
 
-        // 1. Schema Validation
         ResponseEntity<?> validationError = schemaValidator.validateRequest(rawJson, CORRELATION_ID, createSchema);
         if (validationError != null) {
             return validationError;
         }
 
-        // 2. DTO Conversion
-        EmployeeCreateRequestDto requestDto = dtoConversionService.convertToDto(rawJson, CORRELATION_ID, EmployeeCreateRequestDto.class);
+        EmployeeCreateRequestDto requestDto = dtoConversionServiceImpl.convertToDto(rawJson, CORRELATION_ID, EmployeeCreateRequestDto.class);
         if (requestDto == null) {
             return responseService.parseErrorResponse(CORRELATION_ID);
         }
 
-        // 3. Business Logic: Delegate to the creation service
-        return employeeCreationService.handleEmployeeCreation(username, requestDto, CORRELATION_ID);
+        return employeeCreationServiceImpl.handleEmployeeCreation(username, requestDto, CORRELATION_ID);
     }
 }
